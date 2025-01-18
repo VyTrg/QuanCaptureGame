@@ -8,8 +8,8 @@ A traditional game of VietNam
 
 ## INSTALL
 
-'''
+```
 pip install -r requirement.txt
-''''
+```
 
  
