@@ -1,5 +1,5 @@
 class Square:
-    def __init__(self, position, value, is_quan) -> None:
+    def __init__(self, position, value, is_mandarin) -> None:
         self.position = position
         self.value = value
-        self.is_quan = is_quan
+        self.is_mandarin = is_mandarin
