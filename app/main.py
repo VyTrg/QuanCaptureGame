@@ -17,9 +17,9 @@ while running:
             print(pos[0], pos[1])
         if event.type == pg.KEYDOWN:
             if event.key == pg.K_LEFT:
-                location -= 1
+                board.leftRight("left", 1)
             if event.key == pg.K_RIGHT:
-                location += 1
+                board.leftRight("right", 1)
     
     screen.blit(bg_image, (0, 0))  
     board.draw()              

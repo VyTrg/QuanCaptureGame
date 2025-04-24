@@ -20,5 +20,5 @@ Run file main.py
 ```
 python main.py
 ```
-
+Select square to begin, then press Left key or Right key to select direction.
  
