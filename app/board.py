@@ -9,10 +9,10 @@ class Board:
 
         self.entered_tiles = []
 
-        self.square = pg.image.load('../image/default.png')
-        self.quan_trai = pg.image.load('../image/quanTrai.png')
-        self.quan_phai = pg.image.load('../image/quanPhai.png')
-        self.entered = pg.image.load('../image/entered.png')
+        self.square = pg.image.load('image/default.png')
+        self.quan_trai = pg.image.load('image/quanTrai.png')
+        self.quan_phai = pg.image.load('image/quanPhai.png')
+        self.entered = pg.image.load('image/entered.png')
         # self.enteredRight = pg.image.load('../image/enteredRight.png')
         # self.enteredLeft = pg.image.load('../image/enteredLeft.png')
 
