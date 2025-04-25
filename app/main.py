@@ -14,15 +14,21 @@ while running:
     for event in pg.event.get():
         if event.type == pg.QUIT:
             running = False
+
         if event.type == pg.MOUSEBUTTONDOWN:
-            pos=pg.mouse.get_pos()
-            board.drawEnterdArea(pos[0], pos[1])
+            pos = pg.mouse.get_pos()
+            
+            # Kiểm tra nếu người chơi đang chọn hướng từ mũi tên
+            direction = board.handle_arrow_click(pos[0], pos[1])
+            if direction:
+                board.leftRight(direction, 1)
+            else:
+                # Nếu không phải click mũi tên thì chọn ô
+                board.drawEnterdArea(pos[0], pos[1])
+                board.show_arrows = True  # bật hiển thị mũi tên sau khi chọn ô
+            
             print(pos[0], pos[1])
-        if event.type == pg.KEYDOWN:
-            if event.key == pg.K_LEFT:
-                board.leftRight("left", 1)
-            if event.key == pg.K_RIGHT:
-                board.leftRight("right", 1)
+
     
     screen.blit(bg_image, (0, 0))  
     board.draw()  
