@@ -21,6 +21,10 @@ while running:
             # Kiểm tra nếu người chơi đang chọn hướng từ mũi tên
             direction = board.handle_arrow_click(pos[0], pos[1])
             if direction:
+                selected_tile = board.get_selected_tile_index()
+                if selected_tile is not None and 0 <= selected_tile <= 4:
+                    direction = 'left' if direction == 'right' else 'right'
+
                 board.leftRight(direction, 1)
             else:
                 # Nếu không phải click mũi tên thì chọn ô

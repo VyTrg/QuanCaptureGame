@@ -8,6 +8,8 @@ class Board:
         self.cols = 5
 
         self.entered_tiles = []
+        
+
 
         self.square = pg.image.load('image/default.png')
         self.quan_trai = pg.image.load('image/quanTrai.png')
@@ -144,6 +146,10 @@ class Board:
                 i = (i-1+10) % 10
             self.stones_per_tile[i] += 1  # Rải vào ô tiếp theo
         
+            #  Vẽ lại từng bước
+            self.draw()
+            pg.display.flip()
+            pg.time.delay(500)  # delay 500ms giữa mỗi bước rải
         # Cập nhật vị trí khung chọn theo ô cuối cùng đã rải
         
         if i < 5:
@@ -196,4 +202,21 @@ class Board:
             if arrow_rect.collidepoint(x, y):
                 self.show_arrows = False  # Ẩn mũi tên sau khi chọn
                 return direction
+        return None
+
+    def get_selected_tile_index(self):
+        if not self.entered_tiles:
+            return None
+
+        selected_x, selected_y = self.entered_tiles[0]
+        for idx in range(10):
+            if idx < 5:
+                x = idx * self.tile_size + 200
+                y = 100
+            else:
+                x = (9 - idx) * self.tile_size + 200
+                y = 220
+
+            if selected_x == x and selected_y == y:
+                return idx
         return None
