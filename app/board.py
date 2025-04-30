@@ -9,15 +9,18 @@ class Board:
 
         self.entered_tiles = []
 
-        self.square = pg.image.load('../image/default.png')
-        self.quan_trai = pg.image.load('../image/quanTrai.png')
-        self.quan_phai = pg.image.load('../image/quanPhai.png')
-        self.entered = pg.image.load('../image/entered.png')
+        self.mandarin_left_stones = 5
+        self.mandarin_right_stones =5
+
+        self.square = pg.image.load(r"C:\Users\Lenovo\Desktop\GameAI\image\default.png")
+        self.quan_trai = pg.image.load(r"C:\Users\Lenovo\Desktop\GameAI\image\quanTrai.png")
+        self.quan_phai = pg.image.load(r"C:\Users\Lenovo\Desktop\GameAI\image\quanPhai.png")
+        self.entered = pg.image.load(r"C:\Users\Lenovo\Desktop\GameAI\image\/entered.png")
         # self.enteredRight = pg.image.load('../image/enteredRight.png')
         # self.enteredLeft = pg.image.load('../image/enteredLeft.png')
-        self.arrow_left = pg.image.load("../image/trai.png")
-        self.arrow_right = pg.image.load("../image/phai.png")
-        self.stone = pg.image.load(r"../image/stone.png")
+        self.arrow_left = pg.image.load(r"C:\Users\Lenovo\Desktop\GameAI\image\trai.png")
+        self.arrow_right = pg.image.load(r"C:\Users\Lenovo\Desktop\GameAI\image\phai.png")
+        self.stone = pg.image.load(r"C:\Users\Lenovo\Desktop\GameAI\image\stone.png")
 
         self.entered = pg.transform.scale(self.entered, (self.tile_size, self.tile_size))
         self.square = pg.transform.scale(self.square, (self.tile_size, self.tile_size))
@@ -27,7 +30,7 @@ class Board:
         # self.enteredLeft = pg.transform.scale(self.enteredLeft, (self.tile_size, self.tile_size * 2))
         self.arrow_left = pg.transform.scale(self.arrow_left, (self.tile_size //2 -10, self.tile_size -20))
         self.arrow_right = pg.transform.scale(self.arrow_right, (self.tile_size// 2-10, self.tile_size -20))
-        self.stone = pg.transform.scale(self.stone, (30,30))
+        self.stone = pg.transform.scale(self.stone, (20,20))
 
     def draw(self):
        
@@ -54,6 +57,47 @@ class Board:
         #mandarin draw for both sides
         self.screen.blit(self.quan_trai, (80, 100))
         self.screen.blit(self.quan_phai, (800, 100))
+
+        mandarin_center_x = 80 + self.tile_size // 2 
+        mandarin_center_y = 100 + self.tile_size 
+        grid_cols = 5
+        grid_rows = 3
+        stone_spacing_x = 20
+        stone_spacing_y = 40
+
+        grid_width = (grid_cols - 1) * stone_spacing_x 
+        grid_height = (grid_rows - 1) * stone_spacing_y
+        start_x = mandarin_center_x - grid_width // 2
+        start_y = mandarin_center_y - grid_height // 2
+        for i in range(min(self.mandarin_left_stones, 15)):
+            col = i % grid_cols
+            row = i // grid_cols
+            stone_x = start_x + col * stone_spacing_x -2.5
+            stone_y = start_y + row * stone_spacing_y -2.5
+            self.screen.blit(self.stone, (stone_x, stone_y))
+
+        mandarin_center_x = 800 +self.tile_size //2
+        mandarin_center_y = 100 +self.tile_size
+        start_x = mandarin_center_x - grid_width // 2
+        start_y = mandarin_center_y - grid_height // 2
+        for i in range (min(self.mandarin_right_stones, 15)):
+            col = i % grid_cols
+            row = i // grid_cols
+            stone_x = start_x + col * stone_spacing_x -2.5
+            stone_y = start_y + row * stone_spacing_y -2.5
+            self.screen.blit(self.stone, (stone_x, stone_y))
+
+
+
+        # for i in range(self.mandarin_left_stones):
+        #     x = 80 + (i%3) *40 +10
+        #     y = 100 + (i//3) * 40 +30
+        #     self.screen.blit(self.stone, (x, y))
+
+        # for i in range(self.mandarin_right_stones):
+        #     x = 800 + (i%3) *40 +10
+        #     y = 100 + (i//3) * 40 +30
+        #     self.screen.blit(self.stone, (x, y))
 
        
         if self.entered_tiles:

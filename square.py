@@ -3,3 +3,4 @@ class Square:
         self.position = position
         self.value = value
         self.is_mandarin = is_mandarin
+        self.is_eaten = False

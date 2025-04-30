@@ -5,7 +5,7 @@ from scoreBoard import ScoreBoard
 pg.init()
 clock = pg.time.Clock()
 screen = pg.display.set_mode((1200, 600))
-bg_image = pg.image.load('../image/bg.jpg')
+bg_image = pg.image.load(r"C:\Users\Lenovo\Desktop\GameAI\image\bg.jpg")
 bg_image = pg.transform.scale(bg_image, screen.get_size())  
 board = Board(screen)
 scoreboard = ScoreBoard()
