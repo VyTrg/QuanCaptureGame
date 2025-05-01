@@ -12,15 +12,15 @@ class Board:
         self.mandarin_left_stones = 5
         self.mandarin_right_stones =5
 
-        self.square = pg.image.load(r"C:\Users\Lenovo\Desktop\GameAI\image\default.png")
-        self.quan_trai = pg.image.load(r"C:\Users\Lenovo\Desktop\GameAI\image\quanTrai.png")
-        self.quan_phai = pg.image.load(r"C:\Users\Lenovo\Desktop\GameAI\image\quanPhai.png")
-        self.entered = pg.image.load(r"C:\Users\Lenovo\Desktop\GameAI\image\/entered.png")
+        self.square = pg.image.load('../image/default.png')
+        self.quan_trai = pg.image.load('../image/quanTrai.png')
+        self.quan_phai = pg.image.load('../image/quanPhai.png')
+        self.entered = pg.image.load('../image/entered.png')
         # self.enteredRight = pg.image.load('../image/enteredRight.png')
         # self.enteredLeft = pg.image.load('../image/enteredLeft.png')
-        self.arrow_left = pg.image.load(r"C:\Users\Lenovo\Desktop\GameAI\image\trai.png")
-        self.arrow_right = pg.image.load(r"C:\Users\Lenovo\Desktop\GameAI\image\phai.png")
-        self.stone = pg.image.load(r"C:\Users\Lenovo\Desktop\GameAI\image\stone.png")
+        self.arrow_left = pg.image.load("../image/trai.png")
+        self.arrow_right = pg.image.load("../image/phai.png")
+        self.stone = pg.image.load(r"../image/stone.png")
 
         self.entered = pg.transform.scale(self.entered, (self.tile_size, self.tile_size))
         self.square = pg.transform.scale(self.square, (self.tile_size, self.tile_size))
