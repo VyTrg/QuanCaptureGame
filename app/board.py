@@ -164,7 +164,7 @@ class Board:
             self.entered_tiles = []
             self.selected_index = None
             self.show_arrows = False
-            return
+            return 0
 
         current_index = self.selected_index
         count = self.tiles[current_index]
@@ -173,7 +173,7 @@ class Board:
             self.entered_tiles = []
             self.selected_index = None
             self.show_arrows = False
-            return
+            return 0
 
         print(f"Người chơi {player} chọn ô {current_index}, số quân = {count}, hướng = {direction}")
         self.tiles[current_index] = 0  # Lấy hết quân
@@ -184,7 +184,6 @@ class Board:
         i = current_index
 
         # Rải quân
-        # for _ in range(count):
         while count > 0:
             if direction == "left":
                 i = (i + 1) % total_tiles
@@ -192,50 +191,75 @@ class Board:
                 i = (i - 1 + total_tiles) % total_tiles
 
             self.tiles[i] += 1
-            # count -= 1
+            count -= 1
 
             self.draw()
             pg.display.flip()
             pg.time.delay(500)
 
         # Sau khi rải hết, kiểm tra ô kế tiếp
+        score = 0
         while True:
             # Tính ô kế tiếp
             if direction == "left":
                 next_i = (i + 1) % total_tiles
+                after_next_i = (i + 2) % total_tiles
             else:
                 next_i = (i - 1 + total_tiles) % total_tiles
-
+                after_next_i = (i - 2 + total_tiles) % total_tiles
             # Nếu ô kế tiếp là ô quan, dừng
             if next_i == 0 or next_i == 6:
                 print("Ô kế tiếp là ô quan, dừng.")
                 break
 
             if self.tiles[next_i] == 0:
-                break
-            
-            # Tiếp tục rải từ ô kế tiếp
-            count = self.tiles[next_i]
-            self.tiles[next_i] = 0
-
-            self.draw()
-            pg.display.flip()
-            pg.time.delay(300)
-            i = next_i
-
-            while count > 0:
-                if direction == "left":
-                    i = (i + 1) % total_tiles
-                elif direction == "right":
-                    i = (i - 1 + total_tiles) % total_tiles
-                self.tiles[i] += 1
-                count -= 1
-                print(f"Rải quân: i = {i}, tiles[{i}] = {self.tiles[i]}")
+                # Kiểm tra ô sau ô kế tiếp để ăn quân
+                if (after_next_i != 0 and after_next_i != 6) and self.tiles[after_next_i] > 0:
+                    score += self.tiles[after_next_i]
+                    self.tiles[after_next_i] = 0
+                    
+                    self.draw()
+                    pg.display.flip()
+                    pg.time.delay(500)
+                    i = after_next_i  # Tiếp tục từ ô vừa ăn
+                else:
+                    print("Không thể ăn, dừng.")
+                    break
+            else:
+                # Ô kế tiếp không rỗng, tiếp tục rải
+                count = self.tiles[next_i]
+                self.tiles[next_i] = 0
+                print(f"Tiếp tục rải từ ô {next_i}, số quân = {count}")
                 self.draw()
                 pg.display.flip()
-                pg.time.delay(500)
+                pg.time.delay(300)
+                i = next_i
+
+                while count > 0:
+                    if direction == "left":
+                        i = (i + 1) % total_tiles
+                    elif direction == "right":
+                        i = (i - 1 + total_tiles) % total_tiles
+                    # Bỏ qua ô quan khi rải quân
+                    if i == 0 or i == 6:
+                        continue
+                    self.tiles[i] += 1
+                    count -= 1
+                    print(f"Rải quân: ô {i}, số quân = {self.tiles[i]}")
+                    self.draw()
+                    pg.display.flip()
+                    pg.time.delay(500)
+        self.check_and_replenish_empty_rows()
+        self.entered_tiles = []
+        self.selected_index = None
+        self.show_arrows = False
+
+        return score 
 
     def _draw_stones(self, tile_x, tile_y, count, is_mandarin=False):
+        if count == 0:
+            return
+        
         if is_mandarin:
             if count >=10:
                 # Vien da lon

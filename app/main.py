@@ -1,12 +1,14 @@
 import pygame as pg
 from board import Board
 from scoreBoard import ScoreBoard
+from startScreen import run_start_screen
 
 pg.init()
 clock = pg.time.Clock()
 screen = pg.display.set_mode((1000, 600))
 bg_image = pg.image.load('image/bg.png')
 bg_image = pg.transform.scale(bg_image, screen.get_size())  
+ai_option = run_start_screen(screen, bg_image)
 board = Board(screen)
 scoreboard = ScoreBoard()
 running = True
@@ -25,13 +27,14 @@ while running:
                 if selected_tile is not None and 0 <= selected_tile <= 5:
                     direction = 'left' if direction == 'right' else 'right'
 
-                board.leftRight(direction, 1)
+                score = board.leftRight(direction, 1)
+                scoreboard.add_score(1, score)
             else:
                 # Nếu không phải click mũi tên thì chọn ô
                 board.drawEnterdArea(pos[0], pos[1])
                 board.show_arrows = True  # bật hiển thị mũi tên sau khi chọn ô
             
-            print(pos[0], pos[1])
+            # print(pos[0], pos[1])
 
     
     screen.blit(bg_image, (0, 0))  
@@ -39,6 +42,5 @@ while running:
     scoreboard.draw(screen)
             
     pg.display.flip()
-    # pg.display.update()
     clock.tick(60)                 
 pg.quit()
