@@ -7,7 +7,7 @@ class Board:
         # Ô 1-5 và 7-11 là Dân: mỗi ô 5 quân Dân (value=5, is_mandarin=False)
         for i in range(12):
             if i == 0 or i == 6:
-                self.squares[i] = Square(i, 5, True)
+                self.squares[i] = Square(i, 10, True)
             else:
                 self.squares[i] = Square(i, 5, False)
         # Ô 12 và 13 là điểm của 2 người chơi
