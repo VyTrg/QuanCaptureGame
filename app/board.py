@@ -49,6 +49,7 @@ class Board:
             idx = 7 + col
             x = (self.cols - 1 - col) * self.tile_size + 200
             y = 220
+            
             self.screen.blit(self.square, (x, y))
             self._draw_stones(x, y, self.tiles[idx])
 
@@ -61,7 +62,7 @@ class Board:
         self._draw_stones(800, 100, self.tiles[6], is_mandarin=True)
             
  
-        if self.entered_tiles:
+        if self.entered_tiles and self.entered_tiles[0] != (80, 100) and self.entered_tiles[0] != (800, 100):
             self.screen.blit(self.entered, self.entered_tiles[0])
 
         if self.show_arrows and self.entered_tiles:
@@ -85,13 +86,17 @@ class Board:
             tile_x = col * self.tile_size + 200
             tile_y = 100
             if tile_x <= x < tile_x + self.tile_size and tile_y <= y < tile_y + self.tile_size:
-                self.entered_tiles = [(tile_x, tile_y)]
-                self.selected_index = col + 1  # tiles[1] đến tiles[5]
-                self.show_arrows = True
-                return
+                index = col + 1
+                if index != 0 and index != 6:
+                    self.entered_tiles = [(tile_x, tile_y)]
+                    self.selected_index = col + 1  # tiles[1] đến tiles[5]
+                    self.show_arrows = True
+                    return
 
         for col in range(self.cols):
             idx = 7 + col
+            if idx == 6:
+                continue
             tile_x = (self.cols - 1 - col) * self.tile_size + 200
             tile_y = 220
             if tile_x <= x < tile_x + self.tile_size and tile_y <= y < tile_y + self.tile_size:
@@ -145,15 +150,19 @@ class Board:
         self.tiles[current_index] = 0  # Lấy hết quân
         total_tiles = 12
         i = current_index
-
+    
+        # Nếu chọn ô 1-5 thì rải quân sang trái, nếu chọn ô 7-11 thì rải quân sang phải
         # Rải quân
         for _ in range(count):
-            if direction == "left":
+            if direction == "left" :
                 i = (i + 1) % total_tiles
             elif direction == "right":
                 i = (i - 1 + total_tiles) % total_tiles
+            
             self.tiles[i] += 1
             print(f"Rải quân: i = {i}, tiles[{i}] = {self.tiles[i]}")
+            if i == 0 or i == 6:
+                continue
             self.draw()
             pg.display.flip()
             pg.time.delay(500)
@@ -163,6 +172,7 @@ class Board:
         # Kiểm tra và rải thêm quân nếu hàng trên hoặc dưới trống
         self.check_and_replenish_empty_rows()
 
+        
         # Cập nhật ô được chọn
         if i >= 1 and i <= 5:
             new_x = (i - 1) * self.tile_size + 200

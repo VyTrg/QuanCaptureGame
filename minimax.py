@@ -1,7 +1,7 @@
 from treenode import TreeNode
 from heuristic import heuristic
 
-def minimax(node : TreeNode, depth, alpha, beta, maximizingPlayer):
+def minimax(node : TreeNode, depth, maximizingPlayer):
     if depth == 0 or node.is_leaf_node():
         return heuristic(node.data)
     

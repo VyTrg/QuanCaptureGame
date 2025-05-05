@@ -3,6 +3,7 @@ from data import Data
 from treenode import TreeNode
 from alpha_beta import alpha_beta
 from square import Square
+from minimax import minimax
 
 def create_game_tree(board, player, depth):
     squares = [square.value for square in board.squares]
@@ -44,7 +45,7 @@ def ai_move(board, depth=2):
     best_value = float('-inf')
     best_move = None
     for child in tree.children:
-        value = alpha_beta(child, depth, float('-inf'), float('inf'), False)
+        value = minimax(child, depth, False)
         if value > best_value:
             best_value = value
             best_move = child.name
