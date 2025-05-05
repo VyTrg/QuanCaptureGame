@@ -8,8 +8,8 @@ class Board:
         self.cols = 5
 
         self.entered_tiles = []
-        
-
+        self.current_player = 1  # Người chơi hiện tại (1 hoặc 2)
+        self.scores = [0, 0]  # Điểm số (quân ăn được) của hai người chơi
 
         self.square = pg.image.load('image/default.png')
         self.quan_trai = pg.image.load('image/quanTrai.png')
@@ -33,10 +33,9 @@ class Board:
         self.show_arrows = False
         self.arrow_positions = {}
 
-        # khởi tạo số quân cờ mỗi ô (5 quân ở ô thường, 10 quân ở ô quan)
-        self.stones_per_tile = [5, 5, 5, 5, 5, 5, 5, 5, 5, 5]
-        self.mandarin_left = 10
-        self.mandarin_right = 10
+
+        # 10 ô thường, 2 ô quan
+        self.tiles = [10] + [5] * 5 + [10] + [5] * 5
 
     def draw(self):
        
@@ -44,39 +43,24 @@ class Board:
             x = col * self.tile_size + 200
             y = 100
             self.screen.blit(self.square, (x, y))
-            
+            self._draw_stones(x, y, self.tiles[col + 1])
         
         for col in range(self.cols):
+            idx = 7 + col
             x = (self.cols - 1 - col) * self.tile_size + 200
             y = 220
             self.screen.blit(self.square, (x, y))
+            self._draw_stones(x, y, self.tiles[idx])
 
-        # Vẽ quân cờ trên hàng trên (5 ô)
-        for col in range(self.cols):
-            x = col * self.tile_size + 200
-            y = 100
-            count = self.stones_per_tile[col]
-            self._draw_stones(x, y, count)
 
-        # Vẽ quân cờ trên hàng dưới (5 ô)
-        for col in range(self.cols):
-            idx = self.cols + col
-            x = (self.cols - 1 - col) * self.tile_size + 200
-            y = 220
-            count = self.stones_per_tile[idx]
-            self._draw_stones(x, y, count)
-
-        # Vẽ quân cờ ở ô quan
-        # self._draw_stones(80, 100, self.mandarin_left)
-        # self._draw_stones(800, 100, self.mandarin_right)
-        self._draw_stones(80, 100, self.mandarin_left, is_mandarin=True)
-        self._draw_stones(800, 100, self.mandarin_right, is_mandarin=True)
-            
-        #mandarin draw for both sides
         self.screen.blit(self.quan_trai, (80, 100))
         self.screen.blit(self.quan_phai, (800, 100))
-
-       
+        # Vẽ quân cờ ở ô quan
+        
+        self._draw_stones(80, 100, self.tiles[0], is_mandarin=True)
+        self._draw_stones(800, 100, self.tiles[6], is_mandarin=True)
+            
+ 
         if self.entered_tiles:
             self.screen.blit(self.entered, self.entered_tiles[0])
 
@@ -102,79 +86,118 @@ class Board:
             tile_y = 100
             if tile_x <= x < tile_x + self.tile_size and tile_y <= y < tile_y + self.tile_size:
                 self.entered_tiles = [(tile_x, tile_y)]
+                self.selected_index = col + 1  # tiles[1] đến tiles[5]
+                self.show_arrows = True
                 return
 
         for col in range(self.cols):
+            idx = 7 + col
             tile_x = (self.cols - 1 - col) * self.tile_size + 200
             tile_y = 220
             if tile_x <= x < tile_x + self.tile_size and tile_y <= y < tile_y + self.tile_size:
                 self.entered_tiles = [(tile_x, tile_y)]
+                self.selected_index = idx
+                self.show_arrows = True
                 return
     
-    def leftRight(self, direction, steps):
-        if not self.entered_tiles:
-            return  
-
-        current_x, current_y = self.entered_tiles[0]
-
-        for idx in range(10):
-            if idx < 5:
-                tile_x = idx * self.tile_size + 200
-                tile_y = 100
-            else:
-                tile_x = (9 - idx) * self.tile_size + 200
-                tile_y = 220
-
-            if current_x == tile_x and current_y == tile_y:
-                current_index = idx
-                break
-        else:
-            return 
-        
-        # Lấy số quân ở ô hiện tại
-        count = self.stones_per_tile[current_index]
-        if count == 0:
-            return  # Không có quân để rải
-
-        self.stones_per_tile[current_index] = 0  # Lấy hết quân khỏi ô hiện tại
-
-        i = current_index
-        for _ in range(count):
-            if direction == "left":
-                i = (i+1) % 10
-            elif direction == "right":
-                i = (i-1+10) % 10
-            self.stones_per_tile[i] += 1  # Rải vào ô tiếp theo
-        
-            #  Vẽ lại từng bước
+    def check_and_replenish_empty_rows(self):
+        # Kiểm tra hàng trên (tiles[1-5])
+        top_row_empty = all(self.tiles[i] == 0 for i in range(1, 6))
+        if top_row_empty:
+            print("Hàng trên trống, rải thêm 1 quân vào tiles[1-5]")
+            for i in range(1, 6):
+                self.tiles[i] = 1
             self.draw()
             pg.display.flip()
-            pg.time.delay(500)  # delay 500ms giữa mỗi bước rải
-        # Cập nhật vị trí khung chọn theo ô cuối cùng đã rải
-        
-        if i < 5:
-            new_x = i * self.tile_size + 200
+            pg.time.delay(500)  # Delay để người chơi thấy cập nhật
+
+        # Kiểm tra hàng dưới (tiles[7-11])
+        bottom_row_empty = all(self.tiles[i] == 0 for i in range(7, 12))
+        if bottom_row_empty:
+            print("Hàng dưới trống, rải thêm 1 quân vào tiles[7-11]")
+            for i in range(7, 12):
+                self.tiles[i] = 1
+            self.draw()
+            pg.display.flip()
+            pg.time.delay(500)  # Delay để người chơi thấy cập nhật
+    def leftRight(self, direction, player):
+        if not self.entered_tiles or self.selected_index is None:
+            return
+
+        # Chỉ cho phép chọn ô thường (không phải ô quan 0 hoặc 6)
+        if self.selected_index == 0 or self.selected_index == 6:
+            print("Không thể chọn ô quan!")
+            self.entered_tiles = []
+            self.selected_index = None
+            self.show_arrows = False
+            return
+
+        current_index = self.selected_index
+        count = self.tiles[current_index]
+        if count == 0:
+            print(f"Ô {current_index} rỗng, không thể rải!")
+            self.entered_tiles = []
+            self.selected_index = None
+            self.show_arrows = False
+            return
+
+        print(f"Người chơi {player} chọn ô {current_index}, số quân = {count}, hướng = {direction}")
+        self.tiles[current_index] = 0  # Lấy hết quân
+        total_tiles = 12
+        i = current_index
+
+        # Rải quân
+        for _ in range(count):
+            if direction == "left":
+                i = (i + 1) % total_tiles
+            elif direction == "right":
+                i = (i - 1 + total_tiles) % total_tiles
+            self.tiles[i] += 1
+            print(f"Rải quân: i = {i}, tiles[{i}] = {self.tiles[i]}")
+            self.draw()
+            pg.display.flip()
+            pg.time.delay(500)
+
+        print(f"Trạng thái sau khi rải: {self.tiles}")
+
+        # Kiểm tra và rải thêm quân nếu hàng trên hoặc dưới trống
+        self.check_and_replenish_empty_rows()
+
+        # Cập nhật ô được chọn
+        if i >= 1 and i <= 5:
+            new_x = (i - 1) * self.tile_size + 200
             new_y = 100
-        else:
-            new_x = (9 - i) * self.tile_size + 200
+        elif i >= 7 and i <= 11:
+            new_x = (11 - i) * self.tile_size + 200
             new_y = 220
+        elif i == 0:
+            new_x, new_y = 80, 100
+        elif i == 6:
+            new_x, new_y = 800, 100
 
         self.entered_tiles = [(new_x, new_y)]
-        self.show_arrows = False  # Tắt mũi tên sau khi rải
+        self.selected_index = i
+        self.show_arrows = False
+
+        # Chuyển lượt
+        self.current_player = 2 if player == 1 else 1
+        print(f"Lượt của người chơi {self.current_player}")
+
 
 
     def _draw_stones(self, tile_x, tile_y, count, is_mandarin=False):
-        if is_mandarin and count >=10:
-            # Vien da lon
-            big_stone = pg.transform.scale(self.stone, (100, 100))
-            stone_x = tile_x + (self.tile_size - big_stone.get_width()) // 2
-            stone_y = tile_y + ((self.tile_size * 2) - big_stone.get_height()) // 2
-            self.screen.blit(big_stone, (stone_x, stone_y))
+        if is_mandarin:
+            if count >=10:
+                # Vien da lon
+                big_stone = pg.transform.scale(self.stone, (100, 100))
+                stone_x = tile_x + (self.tile_size - big_stone.get_width()) // 2
+                stone_y = tile_y + ((self.tile_size * 2) - big_stone.get_height()) // 2
+                self.screen.blit(big_stone, (stone_x, stone_y))
 
-            # font = pg.font.SysFont(None, 36)
-            # text = font.render(str(count), True, (255, 255, 255))  # chữ trắng
-            # text_rect = text.get_rect(center=(tile_x + self.tile_size // 2, tile_y + self.tile_size // 2))
-            # self.screen.blit(text, text_rect)
+                font = pg.font.SysFont(None, 36)
+                text = font.render(str(count), True, (0, 0, 0))  # chữ trắng
+                text_rect = text.get_rect(center=(tile_x + self.tile_size // 2, tile_y + self.tile_size // 2))
+                self.screen.blit(text, text_rect)
         else:
 
             if count <= 10:
@@ -209,14 +232,20 @@ class Board:
             return None
 
         selected_x, selected_y = self.entered_tiles[0]
-        for idx in range(10):
-            if idx < 5:
-                x = idx * self.tile_size + 200
+        for idx in range(12):
+            if idx >= 1 and idx <= 5:
+                x = (idx - 1) * self.tile_size + 200
                 y = 100
-            else:
-                x = (9 - idx) * self.tile_size + 200
+            elif idx >= 7 and idx <= 11:
+                x = (11 - idx) * self.tile_size + 200
                 y = 220
-
-            if selected_x == x and selected_y == y:
+            elif idx == 0:
+                x, y = 80, 100
+            elif idx == 6:
+                x, y = 800, 100
+            else:
+                continue
+            if x <= selected_x < x + self.tile_size and y <= selected_y < y + self.tile_size:
                 return idx
         return None
+
