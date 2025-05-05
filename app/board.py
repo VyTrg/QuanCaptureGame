@@ -36,7 +36,7 @@ class Board:
 
 
         # 10 ô thường, 2 ô quan
-        self.tiles = [10] + [5] * 5 + [10] + [5] * 5
+        self.tiles = [9] + [5] * 5 + [9] + [5] * 5
 
         # Khởi tạo tọa độ các ô (tile_positions)
         self.tile_positions = {}
@@ -60,6 +60,7 @@ class Board:
             idx = 7 + col
             x = (self.cols - 1 - col) * self.tile_size + 200
             y = 220
+            
             self.screen.blit(self.square, (x, y))
             self._draw_stones(x, y, self.tiles[idx])
 
@@ -113,6 +114,8 @@ class Board:
 
         for col in range(self.cols):
             idx = 7 + col
+            if idx == 6:
+                continue
             tile_x = (self.cols - 1 - col) * self.tile_size + 200
             tile_y = 220
             if tile_x <= x < tile_x + self.tile_size and tile_y <= y < tile_y + self.tile_size:
@@ -182,7 +185,8 @@ class Board:
         pg.time.delay(300)
         total_tiles = 12
         i = current_index
-
+    
+        # Nếu chọn ô 1-5 thì rải quân sang trái, nếu chọn ô 7-11 thì rải quân sang phải
         # Rải quân
         while count > 0:
             if direction == "left":
@@ -272,6 +276,12 @@ class Board:
                 text = font.render(str(count), True, (0, 0, 0))  # chữ trắng
                 text_rect = text.get_rect(center=(tile_x + self.tile_size // 2, tile_y + self.tile_size // 2))
                 self.screen.blit(text, text_rect)
+            else:
+                font = pg.font.SysFont(None, 48)
+                text = font.render(str(count), True, (0, 0, 0))  # Hiển thị số quân
+                text_rect = text.get_rect(center=(tile_x + self.tile_size // 2, tile_y + self.tile_size))
+                self.screen.blit(text, text_rect)
+
         else:
 
             if count <= 10:
@@ -306,5 +316,7 @@ class Board:
             return None
         return self.entered_tiles[0]
 
-        
+
+
+
 
