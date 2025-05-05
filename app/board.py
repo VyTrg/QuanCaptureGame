@@ -10,13 +10,14 @@ class Board:
         self.entered_tiles = []
         self.current_player = 1  # Người chơi hiện tại (1 hoặc 2)
         self.scores = [0, 0]  # Điểm số (quân ăn được) của hai người chơi
+        self.selected_index = None
 
         self.square = pg.image.load('image/default.png')
         self.quan_trai = pg.image.load('image/quanTrai.png')
         self.quan_phai = pg.image.load('image/quanPhai.png')
         self.entered = pg.image.load('image/entered.png')
-        # self.enteredRight = pg.image.load('../image/enteredRight.png')
-        # self.enteredLeft = pg.image.load('../image/enteredLeft.png')
+        self.enteredRight = pg.image.load('image/enteredRight.png')
+        self.enteredLeft = pg.image.load('image/enteredLeft.png')
         self.stone = pg.image.load('image/stone.png')
         self.arrow_left = pg.image.load('image/trai.png')
         self.arrow_right = pg.image.load('image/phai.png')
@@ -25,8 +26,8 @@ class Board:
         self.square = pg.transform.scale(self.square, (self.tile_size, self.tile_size))
         self.quan_trai = pg.transform.scale(self.quan_trai, (self.tile_size, self.tile_size * 2))
         self.quan_phai = pg.transform.scale(self.quan_phai, (self.tile_size, self.tile_size * 2))
-        # self.enteredRight = pg.transform.scale(self.enteredRight, (self.tile_size, self.tile_size * 2))
-        # self.enteredLeft = pg.transform.scale(self.enteredLeft, (self.tile_size, self.tile_size * 2))
+        self.enteredRight = pg.transform.scale(self.enteredRight, (self.tile_size, self.tile_size * 2))
+        self.enteredLeft = pg.transform.scale(self.enteredLeft, (self.tile_size, self.tile_size * 2))
         self.stone = pg.transform.scale(self.stone, (30, 30))
         self.arrow_left = pg.transform.scale(self.arrow_left, (40, 40))
         self.arrow_right = pg.transform.scale(self.arrow_right, (40, 40))
@@ -36,6 +37,16 @@ class Board:
 
         # 10 ô thường, 2 ô quan
         self.tiles = [10] + [5] * 5 + [10] + [5] * 5
+
+        # Khởi tạo tọa độ các ô (tile_positions)
+        self.tile_positions = {}
+        self.tile_positions[0] = (80, 100)
+        for col in range(self.cols):
+            self.tile_positions[col + 1] = (col * self.tile_size + 200, 100)
+        self.tile_positions[6] = (800, 100)
+        for col in range(self.cols):
+            idx = 7 + col
+            self.tile_positions[idx] = ((self.cols - 1 - col) * self.tile_size + 200, 220)
 
     def draw(self):
        
@@ -62,11 +73,21 @@ class Board:
             
  
         if self.entered_tiles:
-            self.screen.blit(self.entered, self.entered_tiles[0])
+            tile_index = self.entered_tiles[0]
+            title_position = self.tile_positions[tile_index]
+
+            if tile_index == 0:
+                self.screen.blit(self.enteredRight, title_position)
+
+            elif tile_index == 6:
+                self.screen.blit(self.enteredLeft, title_position)
+
+            else:
+                self.screen.blit(self.entered, title_position)
 
         if self.show_arrows and self.entered_tiles:
-            tile_x, tile_y = self.entered_tiles[0]
-
+            tile_index = self.entered_tiles[0]
+            tile_x, tile_y = self.tile_positions[tile_index]
             arrow_offset_y = self.tile_size // 2 - 20  # căn giữa theo chiều cao
             left_arrow_x = tile_x - 50  # cách trái 50px
             right_arrow_x = tile_x + self.tile_size + 10  # cách phải 10px
@@ -85,7 +106,7 @@ class Board:
             tile_x = col * self.tile_size + 200
             tile_y = 100
             if tile_x <= x < tile_x + self.tile_size and tile_y <= y < tile_y + self.tile_size:
-                self.entered_tiles = [(tile_x, tile_y)]
+                self.entered_tiles = [col + 1]
                 self.selected_index = col + 1  # tiles[1] đến tiles[5]
                 self.show_arrows = True
                 return
@@ -95,11 +116,24 @@ class Board:
             tile_x = (self.cols - 1 - col) * self.tile_size + 200
             tile_y = 220
             if tile_x <= x < tile_x + self.tile_size and tile_y <= y < tile_y + self.tile_size:
-                self.entered_tiles = [(tile_x, tile_y)]
+                self.entered_tiles = [idx]
                 self.selected_index = idx
                 self.show_arrows = True
                 return
-    
+            
+        tile_x, tile_y = 80, 100
+        if tile_x <= x < tile_x + self.tile_size and tile_y <= y < tile_y + self.tile_size * 2:
+            self.entered_tiles = [0]
+            self.selected_index = 0
+            self.show_arrows = False  # Không hiển thị mũi tên cho ô quan
+            return
+        
+        tile_x, tile_y = 800, 100
+        if tile_x <= x < tile_x + self.tile_size and tile_y <= y < tile_y + self.tile_size * 2:
+            self.entered_tiles = [6]
+            self.selected_index = 6
+            self.show_arrows = False  # Không hiển thị mũi tên cho ô quan
+            return
     def check_and_replenish_empty_rows(self):
         # Kiểm tra hàng trên (tiles[1-5])
         top_row_empty = all(self.tiles[i] == 0 for i in range(1, 6))
@@ -143,47 +177,63 @@ class Board:
 
         print(f"Người chơi {player} chọn ô {current_index}, số quân = {count}, hướng = {direction}")
         self.tiles[current_index] = 0  # Lấy hết quân
+        self.draw()
+        pg.display.flip()
+        pg.time.delay(300)
         total_tiles = 12
         i = current_index
 
         # Rải quân
-        for _ in range(count):
+        # for _ in range(count):
+        while count > 0:
             if direction == "left":
                 i = (i + 1) % total_tiles
             elif direction == "right":
                 i = (i - 1 + total_tiles) % total_tiles
+
             self.tiles[i] += 1
-            print(f"Rải quân: i = {i}, tiles[{i}] = {self.tiles[i]}")
+            # count -= 1
+
             self.draw()
             pg.display.flip()
             pg.time.delay(500)
 
-        print(f"Trạng thái sau khi rải: {self.tiles}")
+        # Sau khi rải hết, kiểm tra ô kế tiếp
+        while True:
+            # Tính ô kế tiếp
+            if direction == "left":
+                next_i = (i + 1) % total_tiles
+            else:
+                next_i = (i - 1 + total_tiles) % total_tiles
 
-        # Kiểm tra và rải thêm quân nếu hàng trên hoặc dưới trống
-        self.check_and_replenish_empty_rows()
+            # Nếu ô kế tiếp là ô quan, dừng
+            if next_i == 0 or next_i == 6:
+                print("Ô kế tiếp là ô quan, dừng.")
+                break
 
-        # Cập nhật ô được chọn
-        if i >= 1 and i <= 5:
-            new_x = (i - 1) * self.tile_size + 200
-            new_y = 100
-        elif i >= 7 and i <= 11:
-            new_x = (11 - i) * self.tile_size + 200
-            new_y = 220
-        elif i == 0:
-            new_x, new_y = 80, 100
-        elif i == 6:
-            new_x, new_y = 800, 100
+            if self.tiles[next_i] == 0:
+                break
+            
+            # Tiếp tục rải từ ô kế tiếp
+            count = self.tiles[next_i]
+            self.tiles[next_i] = 0
 
-        self.entered_tiles = [(new_x, new_y)]
-        self.selected_index = i
-        self.show_arrows = False
+            self.draw()
+            pg.display.flip()
+            pg.time.delay(300)
+            i = next_i
 
-        # Chuyển lượt
-        self.current_player = 2 if player == 1 else 1
-        print(f"Lượt của người chơi {self.current_player}")
-
-
+            while count > 0:
+                if direction == "left":
+                    i = (i + 1) % total_tiles
+                elif direction == "right":
+                    i = (i - 1 + total_tiles) % total_tiles
+                self.tiles[i] += 1
+                count -= 1
+                print(f"Rải quân: i = {i}, tiles[{i}] = {self.tiles[i]}")
+                self.draw()
+                pg.display.flip()
+                pg.time.delay(500)
 
     def _draw_stones(self, tile_x, tile_y, count, is_mandarin=False):
         if is_mandarin:
@@ -230,22 +280,7 @@ class Board:
     def get_selected_tile_index(self):
         if not self.entered_tiles:
             return None
+        return self.entered_tiles[0]
 
-        selected_x, selected_y = self.entered_tiles[0]
-        for idx in range(12):
-            if idx >= 1 and idx <= 5:
-                x = (idx - 1) * self.tile_size + 200
-                y = 100
-            elif idx >= 7 and idx <= 11:
-                x = (11 - idx) * self.tile_size + 200
-                y = 220
-            elif idx == 0:
-                x, y = 80, 100
-            elif idx == 6:
-                x, y = 800, 100
-            else:
-                continue
-            if x <= selected_x < x + self.tile_size and y <= selected_y < y + self.tile_size:
-                return idx
-        return None
+        
 
