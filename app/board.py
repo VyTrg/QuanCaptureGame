@@ -11,15 +11,15 @@ class Board:
         self.current_player = 1  # Người chơi hiện tại (1 hoặc 2)
         self.scores = [0, 0]  # Điểm số (quân ăn được) của hai người chơi
 
-        self.square = pg.image.load('image/default.png')
-        self.quan_trai = pg.image.load('image/quanTrai.png')
-        self.quan_phai = pg.image.load('image/quanPhai.png')
-        self.entered = pg.image.load('image/entered.png')
+        self.square = pg.image.load('../image/default.png')
+        self.quan_trai = pg.image.load('../image/quanTrai.png')
+        self.quan_phai = pg.image.load('../image/quanPhai.png')
+        self.entered = pg.image.load('../image/entered.png')
         # self.enteredRight = pg.image.load('../image/enteredRight.png')
         # self.enteredLeft = pg.image.load('../image/enteredLeft.png')
-        self.stone = pg.image.load('image/stone.png')
-        self.arrow_left = pg.image.load('image/trai.png')
-        self.arrow_right = pg.image.load('image/phai.png')
+        self.stone = pg.image.load('../image/stone.png')
+        self.arrow_left = pg.image.load('../image/trai.png')
+        self.arrow_right = pg.image.load('../image/phai.png')
 
         self.entered = pg.transform.scale(self.entered, (self.tile_size, self.tile_size))
         self.square = pg.transform.scale(self.square, (self.tile_size, self.tile_size))
@@ -172,9 +172,9 @@ class Board:
             return
 
         self.tiles[current_index] = 0
-        self.draw()
-        pg.display.flip()
-        pg.time.delay(300)
+        # self.draw()
+        # pg.display.flip()
+        # pg.time.delay(300)
 
         total_tiles = 12
         pos = current_index
@@ -187,9 +187,9 @@ class Board:
                 pos = (pos + step + total_tiles) % total_tiles
                 self.tiles[pos] += 1
                 stones -= 1
-                self.draw()
-                pg.display.flip()
-                pg.time.delay(300)
+                # self.draw()
+                # pg.display.flip()
+                # pg.time.delay(300)
 
             # Sau ăn, xem ô kế tiếp có quân và không phải ô quan
             next_pos = (pos + step + total_tiles) % total_tiles
@@ -209,9 +209,9 @@ class Board:
                         score += self.tiles[eat_pos]
                         self.tiles[eat_pos] = 0
                         pos = eat_pos
-                        self.draw()
-                        pg.display.flip()
-                        pg.time.delay(300)
+                        # self.draw()
+                        # pg.display.flip()
+                        # pg.time.delay(300)
                         self.check_and_replenish_empty_rows()  # Kiểm tra sau khi dừng lượt
                         next_pos = (pos + step + total_tiles) % total_tiles
                         eat_pos = (next_pos + step + total_tiles) % total_tiles
@@ -224,13 +224,13 @@ class Board:
                         break  # Không thể ăn tiếp
                 break  # Kết thúc lượt sau khi ăn hoặc không ăn được
             # Trường hợp 2: Ô kế tiếp có quân
-            elif self.tiles[next_pos] > 0:
+            elif self.tiles[next_pos] > 0 and next_pos != 0 and next_pos != 6:
                 stones = self.tiles[next_pos]
                 self.tiles[next_pos] = 0
                 pos = next_pos
-                self.draw()
-                pg.display.flip()
-                pg.time.delay(300)
+                # self.draw()
+                # pg.display.flip()
+                # pg.time.delay(300)
             else:
                 break  # Không còn rải hay ăn tiếp nữa
             # if self.tiles[next_pos] > 0 and next_pos not in [0, 6]:
@@ -244,6 +244,9 @@ class Board:
             #     break  # Không còn rải hay ăn tiếp nữa
 
         # Cập nhật điểm
+        self.draw()
+        pg.display.flip()
+        pg.time.delay(300)
         if player == 1:
             self.scores[0] += score
         else:
