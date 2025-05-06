@@ -10,16 +10,16 @@ class Board:
         self.entered_tiles = []
         self.current_player = 1  # Người chơi hiện tại (1 hoặc 2)
         self.scores = [0, 0]  # Điểm số (quân ăn được) của hai người chơi
-
-        self.square = pg.image.load('../image/default.png')
-        self.quan_trai = pg.image.load('../image/quanTrai.png')
-        self.quan_phai = pg.image.load('../image/quanPhai.png')
-        self.entered = pg.image.load('../image/entered.png')
+        self.borrowed = [0, 0]
+        self.square = pg.image.load('image/default.png')
+        self.quan_trai = pg.image.load('image/quanTrai.png')
+        self.quan_phai = pg.image.load('image/quanPhai.png')
+        self.entered = pg.image.load('image/entered.png')
         # self.enteredRight = pg.image.load('../image/enteredRight.png')
         # self.enteredLeft = pg.image.load('../image/enteredLeft.png')
-        self.stone = pg.image.load('../image/stone.png')
-        self.arrow_left = pg.image.load('../image/trai.png')
-        self.arrow_right = pg.image.load('../image/phai.png')
+        self.stone = pg.image.load('image/stone.png')
+        self.arrow_left = pg.image.load('image/trai.png')
+        self.arrow_right = pg.image.load('image/phai.png')
 
         self.entered = pg.transform.scale(self.entered, (self.tile_size, self.tile_size))
         self.square = pg.transform.scale(self.square, (self.tile_size, self.tile_size))
@@ -104,54 +104,56 @@ class Board:
                 self.selected_index = idx
                 self.show_arrows = True
                 return
-    def check_and_replenish_empty_rows(self):
+    def check_and_replenish_empty_rows(self, scoreboard):
         print("Kiểm tra hàng trống...")
+        
         # Kiểm tra hàng trên (tiles[1-5])
         top_row_playable = any(self.tiles[i] > 0 for i in range(1, 6))
-        if not top_row_playable and self.scores[0] >= 5:
-            print("Hàng trên không còn ô nào để rải, người chơi 1 rải 1 quân vào tiles[1-5]")
-            for i in range(1, 6):
-                self.tiles[i] = 1
-            self.scores[0] -= 5
-            self.draw()
-            pg.display.flip()
-            pg.time.delay(500)
-        elif not top_row_playable:
-            print(f"Người chơi 1 không đủ quân ({self.scores[0]} < 5) để rải hàng trên!")
+        if not top_row_playable:
+            if self.scores[0] >= 5:
+                print("Hàng trên không còn ô nào để rải, người chơi 1 rải 1 quân vào tiles[1-5]")
+                for i in range(1, 6):
+                    self.tiles[i] = 1
+                self.scores[0] -= 5
+                scoreboard.add_score(1, -5)
+            elif self.scores[1] >= 5: # người chơi 1 mượn quân 
+                for i in range(1,6):
+                    self.tiles[i] = 1
+                self.scores[1] -= 5
+                self.borrowed[0] += 5
+                scoreboard.add_score(2, -5)
+            else:
+                self.draw()
+                pg.display.flip()
+                pg.time.delay(500)
 
         # Kiểm tra hàng dưới (tiles[7-11])
         bottom_row_playable = any(self.tiles[i] > 0 for i in range(7, 12))
-        if not bottom_row_playable and self.scores[1] >= 5:
-            print("Hàng dưới không còn ô nào để rải, người chơi 2 rải 1 quân vào tiles[7-11]")
-            for i in range(7, 12):
-                self.tiles[i] = 1
-            self.scores[1] -= 5
-            self.draw()
-            pg.display.flip()
-            pg.time.delay(500)
-        elif not bottom_row_playable:
-            print(f"Người chơi 2 không đủ quân ({self.scores[1]} < 5) để rải hàng dưới!")
-    # def check_and_replenish_empty_rows(self):
-    #     # Kiểm tra hàng trên (tiles[1-5])
-    #     top_row_empty = all(self.tiles[i] == 0 for i in range(1, 6))
-    #     if top_row_empty:
-    #         print("Hàng trên trống, rải thêm 1 quân vào tiles[1-5]")
-    #         for i in range(1, 6):
-    #             self.tiles[i] = 1
-    #         self.draw()
-    #         pg.display.flip()
-    #         pg.time.delay(500)  # Delay để người chơi thấy cập nhật
+        if not bottom_row_playable:
+            if self.scores[1] >= 5:
+                print("Hàng dưới không còn ô nào để rải, người chơi 2 rải 1 quân vào tiles[7-11]")
+                for i in range(7, 12):
+                    self.tiles[i] = 1
+                self.scores[1] -= 5
+                scoreboard.add_score(2, -5)
+            elif self.scores[0] >=5:
+                for i in range(7, 12):
+                    self.tiles[i] = 1
+                self.scores[0] -= 5
+                self.borrowed[1] += 5
+                scoreboard.add_score(1, -5)
+            else:
+                self.draw()
+                pg.display.flip()
+                pg.time.delay(500)
+        print(self.borrowed)
+    # Hàm tính điểm cuối cùng, trừ đi số quân đã mượn
+    def calculate_final_scores(self):
+        final_scores = [self.scores[0] - self.borrowed[0], self.scores[1] - self.borrowed[1]]
+        print(f"Điểm cuối cùng - Người chơi 1: {final_scores[0]}, Người chơi 2: {final_scores[1]}")
+        return final_scores
 
-    #     # Kiểm tra hàng dưới (tiles[7-11])
-    #     bottom_row_empty = all(self.tiles[i] == 0 for i in range(7, 12))
-    #     if bottom_row_empty:
-    #         print("Hàng dưới trống, rải thêm 1 quân vào tiles[7-11]")
-    #         for i in range(7, 12):
-    #             self.tiles[i] = 1
-    #         self.draw()
-    #         pg.display.flip()
-    #         pg.time.delay(500)  # Delay để người chơi thấy cập nhật
-    def leftRight(self, direction, player):
+    def leftRight(self, direction, player, scoreboard):
         if not self.entered_tiles or self.selected_index is None:
             return
 
@@ -162,6 +164,13 @@ class Board:
             self.show_arrows = False
             return
 
+        # Kiểm tra ô được chọn có thuộc hàng của người chơi không
+        if (player == 1 and not (1 <= self.selected_index <= 5)) or (player == 2 and not (7 <= self.selected_index <= 11)):
+            print(f"Người chơi {player} không thể chọn ô {self.selected_index}!")
+            self.entered_tiles = []
+            self.selected_index = None
+            self.show_arrows = False
+            return False
         current_index = self.selected_index
         stones = self.tiles[current_index]
         if stones == 0:
@@ -172,9 +181,6 @@ class Board:
             return
 
         self.tiles[current_index] = 0
-        # self.draw()
-        # pg.display.flip()
-        # pg.time.delay(300)
 
         total_tiles = 12
         pos = current_index
@@ -187,9 +193,6 @@ class Board:
                 pos = (pos + step + total_tiles) % total_tiles
                 self.tiles[pos] += 1
                 stones -= 1
-                # self.draw()
-                # pg.display.flip()
-                # pg.time.delay(300)
 
             # Sau ăn, xem ô kế tiếp có quân và không phải ô quan
             next_pos = (pos + step + total_tiles) % total_tiles
@@ -198,7 +201,7 @@ class Board:
             # Nếu ô kế tiếp là ô quan (0 hoặc 6), kết thúc lượt
             if next_pos == 0 or next_pos == 6:
                 print(f"Ô kế tiếp là ô quan ({next_pos}), kết thúc lượt!")
-                self.check_and_replenish_empty_rows()  # Kiểm tra sau khi dừng lượt
+                #self.check_and_replenish_empty_rows(scoreboard)  # Kiểm tra sau khi dừng lượt
                 break
 
             # Trường hợp 1: Ô kế tiếp rỗng
@@ -212,7 +215,7 @@ class Board:
                         # self.draw()
                         # pg.display.flip()
                         # pg.time.delay(300)
-                        self.check_and_replenish_empty_rows()  # Kiểm tra sau khi dừng lượt
+                        # self.check_and_replenish_empty_rows(scoreboard)  # Kiểm tra sau khi dừng lượt
                         next_pos = (pos + step + total_tiles) % total_tiles
                         eat_pos = (next_pos + step + total_tiles) % total_tiles
 
@@ -228,31 +231,23 @@ class Board:
                 stones = self.tiles[next_pos]
                 self.tiles[next_pos] = 0
                 pos = next_pos
-                # self.draw()
-                # pg.display.flip()
-                # pg.time.delay(300)
+                
             else:
                 break  # Không còn rải hay ăn tiếp nữa
-            # if self.tiles[next_pos] > 0 and next_pos not in [0, 6]:
-            #     stones = self.tiles[next_pos]
-            #     self.tiles[next_pos] = 0
-            #     pos = next_pos
-            #     self.draw()
-            #     pg.display.flip()
-            #     pg.time.delay(300)
-            # else:
-            #     break  # Không còn rải hay ăn tiếp nữa
-
-        # Cập nhật điểm
+        # self.draw()
+        # pg.display.flip()
+        # pg.time.delay(300)
+        if player == 1:
+            self.scores[0] += score
+            scoreboard.add_score(1, score)
+        else:
+            self.scores[1] += score
+            scoreboard.add_score(2, score)
+        
+        self.check_and_replenish_empty_rows(scoreboard)  # Kiểm tra sau khi dừng lượt
         self.draw()
         pg.display.flip()
         pg.time.delay(300)
-        if player == 1:
-            self.scores[0] += score
-        else:
-            self.scores[1] += score
-        
-        self.check_and_replenish_empty_rows()  # Kiểm tra sau khi dừng lượt
         # Cập nhật con trỏ vị trí chọn
         if 1 <= pos <= 5:
             new_x = (pos - 1) * self.tile_size + 200
@@ -274,6 +269,7 @@ class Board:
 
         self.current_player = 2 if player == 1 else 1
         print(f"Chuyển lượt: Người chơi {self.current_player}")
+        return False
 
 
 
@@ -346,4 +342,18 @@ class Board:
                 return idx
         return None
 
+    def end_game(self, scoreboard):
+        # Kiểm tra xem có ô nào còn quân không
+        if all(tile == 0 for tile in self.tiles[1:12]):
+            print("Game Over!")
+            final_scores = self.calculate_final_scores()
+            scoreboard.set_final_scores(final_scores[0], final_scores[1])
+            return True
+        elif self.tiles[0] == 0 and self.tiles[6] == 0:
+            print("Game Over!")
+            final_scores = self.calculate_final_scores()
+            scoreboard.set_final_scores(final_scores[0], final_scores[1])
+            return True
+        return False
     
+
