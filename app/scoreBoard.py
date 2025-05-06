@@ -20,21 +20,21 @@ class ScoreBoard:
         self.game_over = True
         # Xác định người thắng
         if player1_score > player2_score:
-            winner = "Player ai win!"
+            winner = "AI WIN!"
         elif player2_score > player1_score:
-            winner = "Player win!"
+            winner = "PLAYER WIN!"
         else:
-            winner = "Hòa!"
-        self.final_message = self.font.render(f"Trò chơi kết thúc! {winner}", True, (255, 0, 0))
+            winner = "DRAW!"
+        self.final_message = self.font.render(f"GAME OVER! {winner}", True, (255, 0, 0))
     def draw (self, screen):
         #Hiển thị điểm người chơi 1
-        text1 = self.font.render (f"PLAYER 1: {self.player1_score}", True, (0,0,0))
+        text1 = self.font.render (f"AI: {self.player1_score}", True, (0,0,0))
         text1_rect = text1.get_rect(center=(200, 520))
         pg.draw.ellipse(screen, (200, 200, 200), text1_rect.inflate(60, 40)) #khung elip màu xám nhạt
         screen.blit(text1, text1_rect)
 
         #Hiển thị điểm người chơi 2
-        text2 = self.font.render (f"PLAYER 2: {self.player2_score}", True, (0,0,0))
+        text2 = self.font.render (f"PLAYER: {self.player2_score}", True, (0,0,0))
         text2_rect= text2.get_rect( center = (800, 520))
         pg.draw.ellipse(screen, (200, 200, 200), text2_rect.inflate(60, 40 ))
         screen.blit(text2, text2_rect)

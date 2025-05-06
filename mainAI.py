@@ -79,28 +79,28 @@ def play_game():
             # board_state là mảng chứa giá trị của các ô từ 0-11
             board.fill_if_empty(0)  # check và xin quân cho AI (người chơi 1)
             current_player = 2
-        # else:
-            # print("Lượt của bạn (người chơi 2, ô 7-11):")
-            # try:
-            #     pos = input("Chọn ô (7-11): ")
-            #     pos = int(pos)
-            #     while pos < 7 or pos > 11 or board.squares[pos].value == 0:
-            #         print("Ô không hợp lệ hoặc không có quân! Chọn lại.")
-            #         pos = int(input("Chọn ô (7-11): "))
-            #     direction = input("Chọn hướng (left/right): ").lower()
-            #     while direction not in ["left", "right"]:
-            #         print("Hướng không hợp lệ! Chọn lại.")
-            #         direction = input("Chọn hướng (left/right): ")
-            #     if direction == "left":
-            #         score, board_state = board.move(pos, -1, 1, enable_log=True)
-            #     else:
-            #         score, board_state = board.move(pos, 1, 1, enable_log=True)
-            #     board.squares[13].value += score
-            #     board.fill_if_empty(1)  #check và xin quân cho người chơi 2
-            #     current_player = 1
-            # except ValueError:
-            #     print("Vui lòng nhập số hợp lệ!")
-            #     continue
+        else:
+            print("Lượt của bạn (người chơi 2, ô 7-11):")
+            try:
+                pos = input("Chọn ô (7-11): ")
+                pos = int(pos)
+                while pos < 7 or pos > 11 or board.squares[pos].value == 0:
+                    print("Ô không hợp lệ hoặc không có quân! Chọn lại.")
+                    pos = int(input("Chọn ô (7-11): "))
+                direction = input("Chọn hướng (left/right): ").lower()
+                while direction not in ["left", "right"]:
+                    print("Hướng không hợp lệ! Chọn lại.")
+                    direction = input("Chọn hướng (left/right): ")
+                if direction == "left":
+                    score, board_state = board.move(pos, -1, 1, enable_log=True)
+                else:
+                    score, board_state = board.move(pos, 1, 1, enable_log=True)
+                board.squares[13].value += score
+                board.fill_if_empty(1)  #check và xin quân cho người chơi 2
+                current_player = 1
+            except ValueError:
+                print("Vui lòng nhập số hợp lệ!")
+                continue
 
         # Kiểm tra điều kiện kết thúc trò chơi
         if board.finished():

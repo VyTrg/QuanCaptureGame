@@ -1,16 +1,25 @@
 import pygame as pg
 from app.board import Board
 from scoreBoard import ScoreBoard
+from startScreen import run_start_screen
 
 pg.init()
 clock = pg.time.Clock()
 screen = pg.display.set_mode((1000, 600))
 bg_image = pg.image.load('../image/bg.png')
 bg_image = pg.transform.scale(bg_image, screen.get_size())  
+
+ai_option = run_start_screen(screen, bg_image)
+if ai_option is None:
+    pg.quit()
+    exit()
+
 board = Board(screen)
 scoreboard = ScoreBoard()
 running = True
 game_over = False
+
+
 while running:
     for event in pg.event.get():
         if event.type == pg.QUIT:
@@ -43,14 +52,11 @@ while running:
         board.check_and_replenish_empty_rows(scoreboard)
         if board.end_game(scoreboard):
             game_over = True
-                #final_scores = board.calculate_final_scores()
-                #scoreboard.set_final_scores(final_scores[0], final_scores[1])
     
     screen.blit(bg_image, (0, 0))  
     board.draw()  
     scoreboard.draw(screen)
             
     pg.display.flip()
-    # pg.display.update()
     clock.tick(60)                 
 pg.quit()

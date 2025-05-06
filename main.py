@@ -2,7 +2,8 @@ import pygame as pg
 from board import Board
 from scoreBoard import ScoreBoard
 from boardAI import BoardAI
-from mainAI import ai_move
+import mainAI
+from startScreen import run_start_screen
 pg.init()
 clock = pg.time.Clock()
 screen = pg.display.set_mode((1000, 600))
@@ -12,6 +13,15 @@ board = Board(screen)
 scoreboard = ScoreBoard()
 boardAI =  BoardAI()
 current_player = 1
+running = True
+game_over = False
+ai_option = run_start_screen(screen, bg_image)
+if ai_option is None:
+    pg.quit()
+    exit()
+
+board = Board(screen)
+scoreboard = ScoreBoard()
 running = True
 game_over = False
 while running:
@@ -47,7 +57,7 @@ while running:
                 boardAI.squares[i].value = board.tiles[i]  # sao chép giá trị từ bàn cờ vào bàn cờ AI
             # boardAI.squares = board.tiles + board.scores
             print("Lượt của AI:")
-            board_state, score = ai_move(boardAI)
+            board_state, score = mainAI.ai_move(boardAI)
             print(board_state)
             # board_state là mảng chứa giá trị của các ô từ 0-11
             board.draw_ai_move(board_state, score, scoreboard)  # Hiển thị nước đi của AI trên bàn cờ
