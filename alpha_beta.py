@@ -11,7 +11,6 @@ def alpha_beta(node : TreeNode, depth, alpha, beta, maximizingPlayer):
             eval = alpha_beta(child, depth - 1, alpha, beta, False)
             maxEval = max(maxEval, eval)
             alpha = max(alpha, eval)
-            # alpha = max(alpha, alpha_beta(node, depth - 1, alpha, beta, False))
             if alpha >= beta:
                 break # cut beta
         return maxEval
@@ -21,7 +20,6 @@ def alpha_beta(node : TreeNode, depth, alpha, beta, maximizingPlayer):
             eval = alpha_beta(child, depth - 1, alpha, beta, True)
             minEval = min(minEval, eval)
             beta = min(beta, eval)
-            # beta = max(beta,  alpha_beta(node, depth - 1, alpha, beta, False))
             if alpha >= beta:
                 break #alpha cut
         return minEval
