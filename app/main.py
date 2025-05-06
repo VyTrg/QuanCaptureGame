@@ -1,16 +1,25 @@
 import pygame as pg
 from board import Board
 from scoreBoard import ScoreBoard
+from startScreen import run_start_screen
 
 pg.init()
 clock = pg.time.Clock()
 screen = pg.display.set_mode((1000, 600))
 bg_image = pg.image.load('image/bg.png')
 bg_image = pg.transform.scale(bg_image, screen.get_size())  
+
+ai_option = run_start_screen(screen, bg_image)
+if ai_option is None:
+    pg.quit()
+    exit()
+
 board = Board(screen)
 scoreboard = ScoreBoard()
 running = True
 game_over = False
+
+
 while running:
     for event in pg.event.get():
         if event.type == pg.QUIT:

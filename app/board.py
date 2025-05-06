@@ -25,8 +25,8 @@ class Board:
         self.square = pg.transform.scale(self.square, (self.tile_size, self.tile_size))
         self.quan_trai = pg.transform.scale(self.quan_trai, (self.tile_size, self.tile_size * 2))
         self.quan_phai = pg.transform.scale(self.quan_phai, (self.tile_size, self.tile_size * 2))
-        # self.enteredRight = pg.transform.scale(self.enteredRight, (self.tile_size, self.tile_size * 2))
-        # self.enteredLeft = pg.transform.scale(self.enteredLeft, (self.tile_size, self.tile_size * 2))
+        #self.enteredRight = pg.transform.scale(self.enteredRight, (self.tile_size, self.tile_size * 2))
+        #self.enteredLeft = pg.transform.scale(self.enteredLeft, (self.tile_size, self.tile_size * 2))
         self.stone = pg.transform.scale(self.stone, (30, 30))
         self.arrow_left = pg.transform.scale(self.arrow_left, (40, 40))
         self.arrow_right = pg.transform.scale(self.arrow_right, (40, 40))
@@ -60,6 +60,19 @@ class Board:
         self._draw_stones(800, 100, self.tiles[6], is_mandarin=True)
             
  
+        # if self.entered_tiles:
+        #     tile_index = self.entered_tiles[0]
+        #     title_position = self.tile_positions[tile_index]
+
+        #     if tile_index == 0:
+        #         self.screen.blit(self.enteredRight, title_position)
+
+        #     elif tile_index == 6:
+        #         self.screen.blit(self.enteredLeft, title_position)
+
+        #     else:
+        #         self.screen.blit(self.entered, title_position)
+
         if self.entered_tiles and self.entered_tiles[0] != (80, 100) and self.entered_tiles[0] != (800, 100):
             self.screen.blit(self.entered, self.entered_tiles[0])
 
@@ -84,7 +97,7 @@ class Board:
             tile_y = 100
             if tile_x <= x < tile_x + self.tile_size and tile_y <= y < tile_y + self.tile_size:
                 index = col + 1
-                if index != 0 and index != 6:
+                if index !=0 and index != 6:
                     self.entered_tiles = [(tile_x, tile_y)]
                     self.selected_index = col + 1  # tiles[1] đến tiles[5]
                     self.show_arrows = True
@@ -101,6 +114,7 @@ class Board:
                 self.selected_index = idx
                 self.show_arrows = True
                 return
+            
     def check_and_replenish_empty_rows(self, scoreboard):
         print("Kiểm tra hàng trống...")
         
@@ -171,7 +185,7 @@ class Board:
             self.entered_tiles = []
             self.selected_index = None
             self.show_arrows = False
-            return
+            return 0
 
         # Kiểm tra ô được chọn có thuộc hàng của người chơi không
         if (player == 1 and not (1 <= self.selected_index <= 5)) or (player == 2 and not (7 <= self.selected_index <= 11)):
@@ -187,7 +201,7 @@ class Board:
             self.entered_tiles = []
             self.selected_index = None
             self.show_arrows = False
-            return
+            return 0
 
         self.tiles[current_index] = 0
 
@@ -332,6 +346,7 @@ class Board:
     def get_selected_tile_index(self):
         if not self.entered_tiles:
             return None
+        # return self.entered_tiles[0]
 
         selected_x, selected_y = self.entered_tiles[0]
         for idx in range(12):
