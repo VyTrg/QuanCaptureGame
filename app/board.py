@@ -56,8 +56,6 @@ class Board:
 
         self.screen.blit(self.quan_trai, (80, 100))
         self.screen.blit(self.quan_phai, (800, 100))
-        # Vẽ quân cờ ở ô quan
-        
         self._draw_stones(80, 100, self.tiles[0], is_mandarin=True)
         self._draw_stones(800, 100, self.tiles[6], is_mandarin=True)
             
@@ -68,15 +66,14 @@ class Board:
         if self.show_arrows and self.entered_tiles:
             tile_x, tile_y = self.entered_tiles[0]
 
-            arrow_offset_y = self.tile_size // 2 - 20  # căn giữa theo chiều cao
-            left_arrow_x = tile_x - 50  # cách trái 50px
-            right_arrow_x = tile_x + self.tile_size + 10  # cách phải 10px
+            arrow_offset_y = self.tile_size // 2 - 20  
+            left_arrow_x = tile_x - 50  
+            right_arrow_x = tile_x + self.tile_size + 10 
             arrow_y = tile_y + arrow_offset_y
 
             self.screen.blit(self.arrow_left, (left_arrow_x, arrow_y))
             self.screen.blit(self.arrow_right, (right_arrow_x, arrow_y))
 
-            # Cập nhật vùng click mũi tên để xử lý click
             self.arrow_positions["left"] = (left_arrow_x, arrow_y)
             self.arrow_positions["right"] = (right_arrow_x, arrow_y)
 
@@ -149,8 +146,20 @@ class Board:
         print(self.borrowed)
     # Hàm tính điểm cuối cùng, trừ đi số quân đã mượn
     def calculate_final_scores(self):
+        # Cộng quân còn lại ở hàng trên [1:6] vào điểm của AI 
+        top_row_stones = sum(self.tiles[1:6])
+        self.scores[0] += top_row_stones
+        print(f"Cộng {top_row_stones} quân từ hàng trên vào điểm AI")
+        # Cộng quân còn lại ở hàng dưới tiles[7:12] vào điểm của PLAYER 
+        bottom_row_stones = sum(self.tiles[7:12])
+        self.scores[1] += bottom_row_stones
+        print(f"Cộng {bottom_row_stones} quân từ hàng dưới vào điểm PLAYER")
+        
+        for i in range(12):
+            self.tiles[i] = 0
+        # Trừ số quân đã mượn
         final_scores = [self.scores[0] - self.borrowed[0], self.scores[1] - self.borrowed[1]]
-        print(f"Điểm cuối cùng - Người chơi 1: {final_scores[0]}, Người chơi 2: {final_scores[1]}")
+        print(f"Điểm cuối cùng - AI: {final_scores[0]}, PLAYER: {final_scores[1]}")
         return final_scores
 
     def leftRight(self, direction, player, scoreboard):
@@ -265,7 +274,7 @@ class Board:
         self.show_arrows = False
 
         print(f"Trạng thái sau khi chơi: {self.tiles}")
-        print(f"Điểm: P1 = {self.scores[0]}, P2 = {self.scores[1]}")
+        print(f"Điểm: AI = {self.scores[0]}, PLAYER = {self.scores[1]}")
 
         self.current_player = 2 if player == 1 else 1
         print(f"Chuyển lượt: Người chơi {self.current_player}")
@@ -274,9 +283,10 @@ class Board:
 
 
     def _draw_stones(self, tile_x, tile_y, count, is_mandarin=False):
+        if count == 0:
+            return
         if is_mandarin:
             if count >=10:
-                # Vien da lon
                 big_stone = pg.transform.scale(self.stone, (100, 100))
                 stone_x = tile_x + (self.tile_size - big_stone.get_width()) // 2
                 stone_y = tile_y + ((self.tile_size * 2) - big_stone.get_height()) // 2
@@ -287,7 +297,6 @@ class Board:
                 text_rect = text.get_rect(center=(tile_x + self.tile_size // 2, tile_y + self.tile_size // 2))
                 self.screen.blit(text, text_rect)
             else:
-                # Chỉ vẽ số lượng bằng text khi count < 10
                 font = pg.font.SysFont(None, 36)
                 text = font.render(str(count), True, (0, 0, 0))
                 text_rect = text.get_rect(center=(tile_x + self.tile_size // 2, tile_y + self.tile_size))
