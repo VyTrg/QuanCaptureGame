@@ -1,25 +1,31 @@
 import pygame as pg
 import math
+# import sys
+# import os
+# sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from boardAI import BoardAI
+from mainAI import ai_move
+
 class Board:
     def __init__(self, screen):
         self.screen = screen
         self.tile_size = 120
         self.rows = 2
         self.cols = 5
-
+        self.boardAI =  BoardAI()
         self.entered_tiles = []
-        self.current_player = 1  # Người chơi hiện tại (1 hoặc 2)
+        self.current_player = 2  # Người chơi hiện tại (1 hoặc 2)
         self.scores = [0, 0]  # Điểm số (quân ăn được) của hai người chơi
         self.borrowed = [0, 0]
-        self.square = pg.image.load('image/default.png')
-        self.quan_trai = pg.image.load('image/quanTrai.png')
-        self.quan_phai = pg.image.load('image/quanPhai.png')
-        self.entered = pg.image.load('image/entered.png')
+        self.square = pg.image.load('../image/default.png')
+        self.quan_trai = pg.image.load('../image/quanTrai.png')
+        self.quan_phai = pg.image.load('../image/quanPhai.png')
+        self.entered = pg.image.load('../image/entered.png')
         # self.enteredRight = pg.image.load('../image/enteredRight.png')
         # self.enteredLeft = pg.image.load('../image/enteredLeft.png')
-        self.stone = pg.image.load('image/stone.png')
-        self.arrow_left = pg.image.load('image/trai.png')
-        self.arrow_right = pg.image.load('image/phai.png')
+        self.stone = pg.image.load('../image/stone.png')
+        self.arrow_left = pg.image.load('../image/trai.png')
+        self.arrow_right = pg.image.load('../image/phai.png')
 
         self.entered = pg.transform.scale(self.entered, (self.tile_size, self.tile_size))
         self.square = pg.transform.scale(self.square, (self.tile_size, self.tile_size))
@@ -164,112 +170,122 @@ class Board:
             self.show_arrows = False
             return
 
-        # Kiểm tra ô được chọn có thuộc hàng của người chơi không
-        if (player == 1 and not (1 <= self.selected_index <= 5)) or (player == 2 and not (7 <= self.selected_index <= 11)):
-            print(f"Người chơi {player} không thể chọn ô {self.selected_index}!")
-            self.entered_tiles = []
-            self.selected_index = None
-            self.show_arrows = False
-            return False
-        current_index = self.selected_index
-        stones = self.tiles[current_index]
-        if stones == 0:
-            print(f"Ô {current_index} rỗng, không thể rải!")
-            self.entered_tiles = []
-            self.selected_index = None
-            self.show_arrows = False
-            return
-
-        self.tiles[current_index] = 0
-
-        total_tiles = 12
-        pos = current_index
-        step = 1 if direction == "left" else -1
-        score = 0
-
-        while True:
-        # RẢI
-            while stones > 0:
-                pos = (pos + step + total_tiles) % total_tiles
-                self.tiles[pos] += 1
-                stones -= 1
-
-            # Sau ăn, xem ô kế tiếp có quân và không phải ô quan
-            next_pos = (pos + step + total_tiles) % total_tiles
-            eat_pos = (next_pos + step + total_tiles) % total_tiles
-
-            # Nếu ô kế tiếp là ô quan (0 hoặc 6), kết thúc lượt
-            if next_pos == 0 or next_pos == 6:
-                print(f"Ô kế tiếp là ô quan ({next_pos}), kết thúc lượt!")
-                #self.check_and_replenish_empty_rows(scoreboard)  # Kiểm tra sau khi dừng lượt
-                break
-
-            # Trường hợp 1: Ô kế tiếp rỗng
-            if self.tiles[next_pos] == 0:
-                while self.tiles[next_pos] == 0:
-                    if self.tiles[eat_pos] > 0:
-                        print(f"Ăn quân ở ô {eat_pos} (sau ô rỗng)")
-                        score += self.tiles[eat_pos]
-                        self.tiles[eat_pos] = 0
-                        pos = eat_pos
-                        # self.draw()
-                        # pg.display.flip()
-                        # pg.time.delay(300)
-                        # self.check_and_replenish_empty_rows(scoreboard)  # Kiểm tra sau khi dừng lượt
-                        next_pos = (pos + step + total_tiles) % total_tiles
-                        eat_pos = (next_pos + step + total_tiles) % total_tiles
-
-                        # Kiểm tra ô kế tiếp sau khi ăn
-                        if next_pos == 0 or next_pos == 6:
-                            print(f"Ô kế tiếp là ô quan ({next_pos}), kết thúc lượt!")
-                            break
-                    else:
-                        break  # Không thể ăn tiếp
-                break  # Kết thúc lượt sau khi ăn hoặc không ăn được
-            # Trường hợp 2: Ô kế tiếp có quân
-            elif self.tiles[next_pos] > 0 and next_pos != 0 and next_pos != 6:
-                stones = self.tiles[next_pos]
-                self.tiles[next_pos] = 0
-                pos = next_pos
-                
-            else:
-                break  # Không còn rải hay ăn tiếp nữa
-        # self.draw()
-        # pg.display.flip()
-        # pg.time.delay(300)
-        if player == 1:
-            self.scores[0] += score
+        if self.current_player == 1:
+            self.tiles, aiscore = ai_move(self.boardAI)
+            self.check_and_replenish_empty_rows(scoreboard)  # Kiểm tra sau khi dừng lượt
+            self.draw()
+            pg.display.flip()
+            pg.time.delay(300)
+            self.scores[0] += aiscore
             scoreboard.add_score(1, score)
-        else:
-            self.scores[1] += score
-            scoreboard.add_score(2, score)
-        
-        self.check_and_replenish_empty_rows(scoreboard)  # Kiểm tra sau khi dừng lượt
-        self.draw()
-        pg.display.flip()
-        pg.time.delay(300)
-        # Cập nhật con trỏ vị trí chọn
-        if 1 <= pos <= 5:
-            new_x = (pos - 1) * self.tile_size + 200
-            new_y = 100
-        elif 7 <= pos <= 11:
-            new_x = (11 - pos) * self.tile_size + 200
-            new_y = 220
-        elif pos == 0:
-            new_x, new_y = 80, 100
-        elif pos == 6:
-            new_x, new_y = 800, 100
+        elif self.current_player == 2 and 7 <= self.selected_index <= 11:
 
-        self.entered_tiles = [(new_x, new_y)]
-        self.selected_index = pos
-        self.show_arrows = False
+        # Kiểm tra ô được chọn có thuộc hàng của người chơi không
+            # if (player == 1 and not (1 <= self.selected_index <= 5)) or (player == 2 and not (7 <= self.selected_index <= 11)):
+            #     print(f"Người chơi {player} không thể chọn ô {self.selected_index}!")
+            #     self.entered_tiles = []
+            #     self.selected_index = None
+            #     self.show_arrows = False
+            #     return False
+            current_index = self.selected_index
+            stones = self.tiles[current_index]
+            if stones == 0:
+                print(f"Ô {current_index} rỗng, không thể rải!")
+                self.entered_tiles = []
+                self.selected_index = None
+                self.show_arrows = False
+                return
 
-        print(f"Trạng thái sau khi chơi: {self.tiles}")
-        print(f"Điểm: P1 = {self.scores[0]}, P2 = {self.scores[1]}")
+            self.tiles[current_index] = 0
 
-        self.current_player = 2 if player == 1 else 1
-        print(f"Chuyển lượt: Người chơi {self.current_player}")
-        return False
+            total_tiles = 12
+            pos = current_index
+            step = 1 if direction == "left" else -1
+            score = 0
+
+            while True:
+            # RẢI
+                while stones > 0:
+                    pos = (pos + step + total_tiles) % total_tiles
+                    self.tiles[pos] += 1
+                    stones -= 1
+
+                # Sau ăn, xem ô kế tiếp có quân và không phải ô quan
+                next_pos = (pos + step + total_tiles) % total_tiles
+                eat_pos = (next_pos + step + total_tiles) % total_tiles
+
+                # Nếu ô kế tiếp là ô quan (0 hoặc 6), kết thúc lượt
+                if next_pos == 0 or next_pos == 6:
+                    print(f"Ô kế tiếp là ô quan ({next_pos}), kết thúc lượt!")
+                    #self.check_and_replenish_empty_rows(scoreboard)  # Kiểm tra sau khi dừng lượt
+                    break
+
+                # Trường hợp 1: Ô kế tiếp rỗng
+                if self.tiles[next_pos] == 0:
+                    while self.tiles[next_pos] == 0:
+                        if self.tiles[eat_pos] > 0:
+                            print(f"Ăn quân ở ô {eat_pos} (sau ô rỗng)")
+                            score += self.tiles[eat_pos]
+                            self.tiles[eat_pos] = 0
+                            pos = eat_pos
+                            # self.draw()
+                            # pg.display.flip()
+                            # pg.time.delay(300)
+                            # self.check_and_replenish_empty_rows(scoreboard)  # Kiểm tra sau khi dừng lượt
+                            next_pos = (pos + step + total_tiles) % total_tiles
+                            eat_pos = (next_pos + step + total_tiles) % total_tiles
+
+                            # Kiểm tra ô kế tiếp sau khi ăn
+                            if next_pos == 0 or next_pos == 6:
+                                print(f"Ô kế tiếp là ô quan ({next_pos}), kết thúc lượt!")
+                                break
+                        else:
+                            break  # Không thể ăn tiếp
+                    break  # Kết thúc lượt sau khi ăn hoặc không ăn được
+                # Trường hợp 2: Ô kế tiếp có quân
+                elif self.tiles[next_pos] > 0 and next_pos != 0 and next_pos != 6:
+                    stones = self.tiles[next_pos]
+                    self.tiles[next_pos] = 0
+                    pos = next_pos
+                    
+                else:
+                    break  # Không còn rải hay ăn tiếp nữa
+            # self.draw()
+            # pg.display.flip()
+            # pg.time.delay(300)
+            if player == 1:
+                self.scores[0] += score
+                scoreboard.add_score(1, score)
+            else:
+                self.scores[1] += score
+                scoreboard.add_score(2, score)
+            
+            self.check_and_replenish_empty_rows(scoreboard)  # Kiểm tra sau khi dừng lượt
+            self.draw()
+            pg.display.flip()
+            pg.time.delay(300)
+            # Cập nhật con trỏ vị trí chọn
+            if 1 <= pos <= 5:
+                new_x = (pos - 1) * self.tile_size + 200
+                new_y = 100
+            elif 7 <= pos <= 11:
+                new_x = (11 - pos) * self.tile_size + 200
+                new_y = 220
+            elif pos == 0:
+                new_x, new_y = 80, 100
+            elif pos == 6:
+                new_x, new_y = 800, 100
+
+            self.entered_tiles = [(new_x, new_y)]
+            self.selected_index = pos
+            self.show_arrows = False
+
+            print(f"Trạng thái sau khi chơi: {self.tiles}")
+            print(f"Điểm: P1 = {self.scores[0]}, P2 = {self.scores[1]}")
+
+            self.current_player = 2 if player == 1 else 1
+            print(f"Chuyển lượt: Người chơi {self.current_player}")
+            return False
 
 
 

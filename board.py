@@ -1,218 +1,381 @@
-from square import Square
+import pygame as pg
+import math
+
 
 class Board:
-    def __init__(self):
-        self.squares = [None] * 14
-        # Ô 0 và 6 là Quan: mỗi ô 5 quân Quan (value=5, is_mandarin=True)
-        # Ô 1-5 và 7-11 là Dân: mỗi ô 5 quân Dân (value=5, is_mandarin=False)
-        for i in range(12):
-            if i == 0 or i == 6:
-                self.squares[i] = Square(i, 10, True)
-            else:
-                self.squares[i] = Square(i, 5, False)
-        # Ô 12 và 13 là điểm của 2 người chơi
-        self.squares[12] = Square(12, 0, False)
-        self.squares[13] = Square(13, 0, False)
-        # Biến lưu trữ số quân mượn
-        self.player1_borrowed = 0  # Người chơi 1 mượn
-        self.player2_borrowed = 0  # Người chơi 2 mượn
+    def __init__(self, screen):
+        self.screen = screen
+        self.tile_size = 120
+        self.rows = 2
+        self.cols = 5
+        # self.boardAI =  BoardAI()
+        self.entered_tiles = []
+        self.current_player = 2  # Người chơi hiện tại (1 hoặc 2)
+        self.scores = [0, 0]  # Điểm số (quân ăn được) của hai người chơi
+        self.borrowed = [0, 0]
+        self.square = pg.image.load('image/default.png')
+        self.quan_trai = pg.image.load('image/quanTrai.png')
+        self.quan_phai = pg.image.load('image/quanPhai.png')
+        self.entered = pg.image.load('image/entered.png')
+        # self.enteredRight = pg.image.load('../image/enteredRight.png')
+        # self.enteredLeft = pg.image.load('../image/enteredLeft.png')
+        self.stone = pg.image.load('image/stone.png')
+        self.arrow_left = pg.image.load('image/trai.png')
+        self.arrow_right = pg.image.load('image/phai.png')
 
-    def display_board(self):
-        print("\n" + "="*50)
-        print("\t\tBÀN CỜ Ô ĂN QUAN")
-        print("="*50)
-        print(f"   ({'*'}{self.squares[0].value:>2}*)  ", end=" ")
-        for i in range(1, 6):
-            print(f"[{self.squares[i].value:^2}]", end=" ")
-        print(f"  ({'*'}{self.squares[6].value:>2}*)")
-        print(f"   ({'  '})  ", end=" ")
-        for i in range(11, 6, -1):
-            print(f"[{self.squares[i].value:^2}]", end=" ")
-        print(f"  ({'  '})")
-        print("\nĐiểm người chơi 1 (ô 12):", self.squares[12].value)
-        print("Điểm người chơi 2 (ô 13):", self.squares[13].value)
+        self.entered = pg.transform.scale(self.entered, (self.tile_size, self.tile_size))
+        self.square = pg.transform.scale(self.square, (self.tile_size, self.tile_size))
+        self.quan_trai = pg.transform.scale(self.quan_trai, (self.tile_size, self.tile_size * 2))
+        self.quan_phai = pg.transform.scale(self.quan_phai, (self.tile_size, self.tile_size * 2))
+        # self.enteredRight = pg.transform.scale(self.enteredRight, (self.tile_size, self.tile_size * 2))
+        # self.enteredLeft = pg.transform.scale(self.enteredLeft, (self.tile_size, self.tile_size * 2))
+        self.stone = pg.transform.scale(self.stone, (30, 30))
+        self.arrow_left = pg.transform.scale(self.arrow_left, (40, 40))
+        self.arrow_right = pg.transform.scale(self.arrow_right, (40, 40))
+        self.show_arrows = False
+        self.arrow_positions = {}
+
+
+        # 10 ô thường, 2 ô quan
+        self.tiles = [10] + [5] * 5 + [10] + [5] * 5
+
+    def draw(self):
+       
+        for col in range(self.cols):
+            x = col * self.tile_size + 200
+            y = 100
+            self.screen.blit(self.square, (x, y))
+            self._draw_stones(x, y, self.tiles[col + 1])
         
-        #hien thi mang
-        board_state = [self.squares[i].value for i in range(12)]
-        print("\nbàn cờ (0-11):", board_state)
-        print("="*50)
-
-    def fill_if_empty(self, player_idx, enable_log=True):
-        #check player1 (player_idx=0)
-        if player_idx == 0 and not any(self.squares[i].value for i in range(1, 6)):
-            # lay score hien tai cua player1
-            current_score = self.squares[12].value
+        for col in range(self.cols):
+            idx = 7 + col
+            x = (self.cols - 1 - col) * self.tile_size + 200
+            y = 220
             
-            if current_score >= 5:
-                #truong hop du 5 quan de fill
-                self.squares[12].value -= 5
+            self.screen.blit(self.square, (x, y))
+            self._draw_stones(x, y, self.tiles[idx])
+
+
+        self.screen.blit(self.quan_trai, (80, 100))
+        self.screen.blit(self.quan_phai, (800, 100))
+        # Vẽ quân cờ ở ô quan
+        
+        self._draw_stones(80, 100, self.tiles[0], is_mandarin=True)
+        self._draw_stones(800, 100, self.tiles[6], is_mandarin=True)
+            
+ 
+        if self.entered_tiles and self.entered_tiles[0] != (80, 100) and self.entered_tiles[0] != (800, 100):
+            self.screen.blit(self.entered, self.entered_tiles[0])
+
+        if self.show_arrows and self.entered_tiles:
+            tile_x, tile_y = self.entered_tiles[0]
+
+            arrow_offset_y = self.tile_size // 2 - 20  # căn giữa theo chiều cao
+            left_arrow_x = tile_x - 50  # cách trái 50px
+            right_arrow_x = tile_x + self.tile_size + 10  # cách phải 10px
+            arrow_y = tile_y + arrow_offset_y
+
+            self.screen.blit(self.arrow_left, (left_arrow_x, arrow_y))
+            self.screen.blit(self.arrow_right, (right_arrow_x, arrow_y))
+
+            # Cập nhật vùng click mũi tên để xử lý click
+            self.arrow_positions["left"] = (left_arrow_x, arrow_y)
+            self.arrow_positions["right"] = (right_arrow_x, arrow_y)
+
+
+    def drawEnterdArea(self, x, y):
+        for col in range(self.cols):
+            tile_x = col * self.tile_size + 200
+            tile_y = 100
+            if tile_x <= x < tile_x + self.tile_size and tile_y <= y < tile_y + self.tile_size:
+                index = col + 1
+                if index != 0 and index != 6:
+                    self.entered_tiles = [(tile_x, tile_y)]
+                    self.selected_index = col + 1  # tiles[1] đến tiles[5]
+                    self.show_arrows = True
+                    return
+
+        for col in range(self.cols):
+            idx = 7 + col
+            if idx == 6:
+                continue
+            tile_x = (self.cols - 1 - col) * self.tile_size + 200
+            tile_y = 220
+            if tile_x <= x < tile_x + self.tile_size and tile_y <= y < tile_y + self.tile_size:
+                self.entered_tiles = [(tile_x, tile_y)]
+                self.selected_index = idx
+                self.show_arrows = True
+                return
+    def check_and_replenish_empty_rows(self, scoreboard):
+        # print("Kiểm tra hàng trống...")
+        
+        # Kiểm tra hàng trên (tiles[1-5])
+        top_row_playable = any(self.tiles[i] > 0 for i in range(1, 6))
+        if not top_row_playable:
+            if self.scores[0] >= 5:
+                print("Hàng trên không còn ô nào để rải, người chơi 1 rải 1 quân vào tiles[1-5]")
                 for i in range(1, 6):
-                    self.squares[i].value = 1
-                if enable_log:
-                    print(f"player 1 du 5 diem de fill")
+                    self.tiles[i] = 1
+                self.scores[0] -= 5
+                scoreboard.add_score(1, -5)
+            elif self.scores[1] >= 5: # người chơi 1 mượn quân 
+                for i in range(1,6):
+                    self.tiles[i] = 1
+                self.scores[1] -= 5
+                self.borrowed[0] += 5
+                scoreboard.add_score(2, -5)
             else:
-                #truong hop khong du quan-> muon quan
-                borrowed = 5 - current_score
-                self.player1_borrowed += borrowed
-                
-                #reset diem ve 0 vi muon quan tu doi thu
-                self.squares[12].value = 0
-                
-                #fill lên cac o
-                for i in range(1, 6):
-                    self.squares[i].value = 1
-                    
-                if enable_log:
-                    print(f"player1 co {current_score} diem và muon {borrowed} quan")
-        
-        # check player2 (player_idx=1)
-        if player_idx == 1 and not any(self.squares[i].value for i in range(7, 12)):
-            current_score = self.squares[13].value
-            
-            if current_score >= 5:
-                self.squares[13].value -= 5
+                self.draw()
+                pg.display.flip()
+                pg.time.delay(500)
+
+        # Kiểm tra hàng dưới (tiles[7-11])
+        bottom_row_playable = any(self.tiles[i] > 0 for i in range(7, 12))
+        if not bottom_row_playable:
+            if self.scores[1] >= 5:
+                print("Hàng dưới không còn ô nào để rải, người chơi 2 rải 1 quân vào tiles[7-11]")
                 for i in range(7, 12):
-                    self.squares[i].value = 1
-                if enable_log:
-                    print(f"player 2 du 5 diem de fill")
-            else:
-                borrowed = 5 - current_score
-                self.player2_borrowed += borrowed
-                self.squares[13].value = 0
+                    self.tiles[i] = 1
+                self.scores[1] -= 5
+                scoreboard.add_score(2, -5)
+            elif self.scores[0] >=5:
                 for i in range(7, 12):
-                    self.squares[i].value = 1
-                if enable_log:
-                    print(f"player2 co {current_score} diem và muon {borrowed} quan")
-
-    def finished(self):
-        # kiem tra quan o 2 o Quan neu =0
-        quan_empty = self.squares[0].value == 0 and self.squares[6].value == 0
-        
-        #kiem tra cac quan tren ban co
-        all_empty = True
-        for i in range(12):
-            if self.squares[i].value > 0:
-                all_empty = False
-                break
-        return quan_empty or all_empty
-
-    def move(self, start_pos, direction, player_idx, SLQuan=5, enable_log=True):
-        stones = self.squares[start_pos].value
-        self.squares[start_pos].value = 0
-        pos = start_pos
-        score = 0
-        eaten_info = []
-
-        if enable_log:
-            print(f"Người chơi {player_idx + 1} rải {stones} quân từ ô {start_pos}, {'phải' if direction == 1 else 'trái'}")
-        
-        # rai quan deu
-        while stones > 0:
-            pos = (pos + direction) % 12
-            self.squares[pos].value += 1
-            stones -= 1
-            
-        if enable_log:
-            print(f"Kết thúc rải ở ô {pos}, có {self.squares[pos].value} quân")
-        
-        # kiem tra an quan or tiep tuc rai quan
-        while True:
-            next_pos = (pos + direction) % 12
-            if enable_log:
-                print(f"Kiểm tra ô tiếp theo {next_pos}: {'trống' if self.squares[next_pos].value == 0 else f'có {self.squares[next_pos].value} quân'}")
-            
-            #check o tiep theo la quan thi ket thuc luot
-            if self.squares[next_pos].is_mandarin:
-                if enable_log:
-                    print(f"Ô tiếp theo {next_pos} là ô Quan. Kết thúc lượt.")
-                break
-                
-            if self.squares[next_pos].value == 0:
-                check_pos = (next_pos + direction) % 12
-                sq = self.squares[check_pos]
-                
-                if enable_log:
-                    print(f"Kiểm tra ô sau đó {check_pos}: {'trống' if sq.value == 0 else f'có {sq.value} quân'}")
-                
-                if sq.value > 0:
-                    # an quan o dan or mandarin roi + diem
-                    eaten_points = sq.value
-                    score += eaten_points
-                    sq.value = 0
-                    
-                    eaten_type = "Quan" if sq.is_mandarin else "Dân"
-                    eaten_info.append(f"{eaten_points} quân {eaten_type} ở ô {check_pos}")
-                    
-                    if enable_log:
-                        print(f"Ăn {eaten_points} quân {eaten_type} ở ô {check_pos}")
-                    
-                    # neu an quan o mandarin thi set is_eaten
-                    if sq.is_mandarin and enable_log:
-                        print(f"Ô {check_pos} là Quan và đã hết quân")
-                    
-                    # kiem tra co an tiep khong
-                    pos = check_pos
-                    next_after_eaten = (pos + direction) % 12
-                    
-                    if enable_log:
-                        print(f"Kiểm tra ô sau khi ăn {next_after_eaten}: {'trống' if self.squares[next_after_eaten].value == 0 else f'có {self.squares[next_after_eaten].value} quân'}")
-                    
-                    if self.squares[next_after_eaten].value == 0:
-                        # neu o sau la o trong thi xet tiep
-                        if enable_log:
-                            print("Tiếp tục kiểm tra ăn quân")
-                        continue
-                    else:
-                        # khong phai o trong thi dung an
-                        if enable_log:
-                            print("Dừng ăn quân vì ô tiếp theo không trống")
-                        break
-                else:
-                    if enable_log:
-                        print("Không ăn quân vì ô tiếp theo là trống")
-                    break
+                    self.tiles[i] = 1
+                self.scores[0] -= 5
+                self.borrowed[1] += 5
+                scoreboard.add_score(1, -5)
             else:
-                # lay quan o tiep theo ma rai
-                stones = self.squares[next_pos].value
-                self.squares[next_pos].value = 0
-                pos = next_pos
-                
-                if enable_log:
-                    print(f"Lấy {stones} quân từ ô {next_pos} để tiếp tục rải")
-                
+                self.draw()
+                pg.display.flip()
+                pg.time.delay(500)
+        # print(self.borrowed)
+    # Hàm tính điểm cuối cùng, trừ đi số quân đã mượn
+    def calculate_final_scores(self):
+        final_scores = [self.scores[0] - self.borrowed[0], self.scores[1] - self.borrowed[1]]
+        print(f"Điểm cuối cùng - Người chơi 1: {final_scores[0]}, Người chơi 2: {final_scores[1]}")
+        return final_scores
+
+    def draw_ai_move(self, tiles, score, scoreboard):
+        self.tiles= tiles
+        
+        self.check_and_replenish_empty_rows(scoreboard)  # Kiểm tra sau khi dừng lượt
+        self.draw()
+        pg.display.flip()
+        pg.time.delay(300)
+        self.scores[0] += score
+        scoreboard.add_score(1, score)
+
+    def leftRight(self, direction, player, scoreboard):
+        if not self.entered_tiles or self.selected_index is None:
+            return
+
+        if self.selected_index == 0 or self.selected_index == 6:
+            print("Không thể chọn ô quan!")
+            self.entered_tiles = []
+            self.selected_index = None
+            self.show_arrows = False
+            return
+
+        # if self.current_player == 1:
+        #     self.tiles, aiscore = ai_move(self.boardAI)
+        #     self.check_and_replenish_empty_rows(scoreboard)  # Kiểm tra sau khi dừng lượt
+        #     self.draw()
+        #     pg.display.flip()
+        #     pg.time.delay(300)
+        #     self.scores[0] += aiscore
+        #     scoreboard.add_score(1, score)
+        if self.current_player == 2 and 7 <= self.selected_index <= 11:
+
+        # Kiểm tra ô được chọn có thuộc hàng của người chơi không
+            # if (player == 1 and not (1 <= self.selected_index <= 5)) or (player == 2 and not (7 <= self.selected_index <= 11)):
+            #     print(f"Người chơi {player} không thể chọn ô {self.selected_index}!")
+            #     self.entered_tiles = []
+            #     self.selected_index = None
+            #     self.show_arrows = False
+            #     return False
+            current_index = self.selected_index
+            stones = self.tiles[current_index]
+            if stones == 0:
+                print(f"Ô {current_index} rỗng, không thể rải!")
+                self.entered_tiles = []
+                self.selected_index = None
+                self.show_arrows = False
+                return
+
+            self.tiles[current_index] = 0
+
+            total_tiles = 12
+            pos = current_index
+            step = 1 if direction == "left" else -1
+            score = 0
+
+            while True:
+            # RẢI
                 while stones > 0:
-                    pos = (pos + direction) % 12
-                    self.squares[pos].value += 1
+                    pos = (pos + step + total_tiles) % total_tiles
+                    self.tiles[pos] += 1
                     stones -= 1
-                
-                if enable_log:
-                    print(f"ket thuc rai o {pos}, co {self.squares[pos].value} quan")
+
+                # Sau ăn, xem ô kế tiếp có quân và không phải ô quan
+                next_pos = (pos + step + total_tiles) % total_tiles
+                eat_pos = (next_pos + step + total_tiles) % total_tiles
+
+                # Nếu ô kế tiếp là ô quan (0 hoặc 6), kết thúc lượt
+                if next_pos == 0 or next_pos == 6:
+                    print(f"Ô kế tiếp là ô quan ({next_pos}), kết thúc lượt!")
+                    #self.check_and_replenish_empty_rows(scoreboard)  # Kiểm tra sau khi dừng lượt
+                    break
+
+                # Trường hợp 1: Ô kế tiếp rỗng
+                if self.tiles[next_pos] == 0:
+                    while self.tiles[next_pos] == 0:
+                        if self.tiles[eat_pos] > 0:
+                            print(f"Ăn quân ở ô {eat_pos} (sau ô rỗng)")
+                            score += self.tiles[eat_pos]
+                            self.tiles[eat_pos] = 0
+                            pos = eat_pos
+                            # self.draw()
+                            # pg.display.flip()
+                            # pg.time.delay(300)
+                            # self.check_and_replenish_empty_rows(scoreboard)  # Kiểm tra sau khi dừng lượt
+                            next_pos = (pos + step + total_tiles) % total_tiles
+                            eat_pos = (next_pos + step + total_tiles) % total_tiles
+
+                            # Kiểm tra ô kế tiếp sau khi ăn
+                            if next_pos == 0 or next_pos == 6:
+                                print(f"Ô kế tiếp là ô quan ({next_pos}), kết thúc lượt!")
+                                break
+                        else:
+                            break  # Không thể ăn tiếp
+                    break  # Kết thúc lượt sau khi ăn hoặc không ăn được
+                # Trường hợp 2: Ô kế tiếp có quân
+                elif self.tiles[next_pos] > 0 and next_pos != 0 and next_pos != 6:
+                    stones = self.tiles[next_pos]
+                    self.tiles[next_pos] = 0
+                    pos = next_pos
+                    
+                else:
+                    break  # Không còn rải hay ăn tiếp nữa
+            # self.draw()
+            # pg.display.flip()
+            # pg.time.delay(300)
+            if player == 1:
+                self.scores[0] += score
+                scoreboard.add_score(1, score)
+            else:
+                self.scores[1] += score
+                scoreboard.add_score(2, score)
+            
+            self.check_and_replenish_empty_rows(scoreboard)  # Kiểm tra sau khi dừng lượt
+            self.draw()
+            pg.display.flip()
+            pg.time.delay(300)
+            # Cập nhật con trỏ vị trí chọn
+            if 1 <= pos <= 5:
+                new_x = (pos - 1) * self.tile_size + 200
+                new_y = 100
+            elif 7 <= pos <= 11:
+                new_x = (11 - pos) * self.tile_size + 200
+                new_y = 220
+            elif pos == 0:
+                new_x, new_y = 80, 100
+            elif pos == 6:
+                new_x, new_y = 800, 100
+
+            self.entered_tiles = [(new_x, new_y)]
+            self.selected_index = pos
+            self.show_arrows = False
+
+            print(f"Trạng thái sau khi chơi: {self.tiles}")
+            print(f"Điểm: P1 = {self.scores[0]}, P2 = {self.scores[1]}")
+
+            # self.current_player = 2 if player == 1 else 1
+            print(f"Chuyển lượt: Người chơi {self.current_player}")
+            return False
+
+
+
+    def _draw_stones(self, tile_x, tile_y, count, is_mandarin=False):
+        if is_mandarin:
+            if count >=10:
+                # Vien da lon
+                big_stone = pg.transform.scale(self.stone, (100, 100))
+                stone_x = tile_x + (self.tile_size - big_stone.get_width()) // 2
+                stone_y = tile_y + ((self.tile_size * 2) - big_stone.get_height()) // 2
+                self.screen.blit(big_stone, (stone_x, stone_y))
+
+                font = pg.font.SysFont(None, 36)
+                text = font.render(str(count), True, (0, 0, 0))  # chữ trắng
+                text_rect = text.get_rect(center=(tile_x + self.tile_size // 2, tile_y + self.tile_size // 2))
+                self.screen.blit(text, text_rect)
+            else:
+                # Chỉ vẽ số lượng bằng text khi count < 10
+                font = pg.font.SysFont(None, 36)
+                text = font.render(str(count), True, (0, 0, 0))
+                text_rect = text.get_rect(center=(tile_x + self.tile_size // 2, tile_y + self.tile_size))
+                self.screen.blit(text, text_rect)
+        else:
+            if count < 10:
+                center_x = tile_x + self.tile_size // 2
+                center_y = tile_y + self.tile_size // 2
+                radius = 35  # bán kính vòng tròn
+
+                for i in range(count):
+                    angle = 2 * math.pi * i / count
+                    offset_x = int(math.cos(angle) * radius)
+                    offset_y = int(math.sin(angle) * radius)
+                    stone_x = center_x + offset_x - self.stone.get_width() // 2
+                    stone_y = center_y + offset_y - self.stone.get_height() // 2
+                    self.screen.blit(self.stone, (stone_x, stone_y))
+            else:
+                font = pg.font.SysFont(None, 48) 
+                text = font.render(str(count), True, (0, 0, 0))
+                text_rect = text.get_rect(center = (tile_x + self.tile_size // 2, tile_y + self.tile_size // 2))
+                self.screen.blit(text, text_rect)
+
+    def handle_arrow_click(self, x, y):
+        for direction, pos in self.arrow_positions.items():
+            arrow_x, arrow_y = pos
+            arrow_rect = pg.Rect(arrow_x, arrow_y, 40, 40)
+            if arrow_rect.collidepoint(x, y):
+                self.show_arrows = False  # Ẩn mũi tên sau khi chọn
+                return direction
+        return None
+
+    def get_selected_tile_index(self):
+        if not self.entered_tiles:
+            return None
+
+        selected_x, selected_y = self.entered_tiles[0]
+        for idx in range(12):
+            if idx >= 1 and idx <= 5:
+                x = (idx - 1) * self.tile_size + 200
+                y = 100
+            elif idx >= 7 and idx <= 11:
+                x = (11 - idx) * self.tile_size + 200
+                y = 220
+            elif idx == 0:
+                x, y = 80, 100
+            elif idx == 6:
+                x, y = 800, 100
+            else:
+                continue
+            if x <= selected_x < x + self.tile_size and y <= selected_y < y + self.tile_size:
+                return idx
+        return None
+
+    def end_game(self, scoreboard):
+        # Kiểm tra xem có ô nào còn quân không
+        if all(tile == 0 for tile in self.tiles[1:12]):
+            print("Game Over!")
+            final_scores = self.calculate_final_scores()
+            scoreboard.set_final_scores(final_scores[0], final_scores[1])
+            return True
+        elif self.tiles[0] == 0 and self.tiles[6] == 0:
+            print("Game Over!")
+            final_scores = self.calculate_final_scores()
+            scoreboard.set_final_scores(final_scores[0], final_scores[1])
+            return True
+        return False
     
-        #tong diem an duco
-        if score > 0 and enable_log:
-            print(f"tong diem an duoc {score} diem: {', '.join(eaten_info)}")
-        board_state = [self.squares[i].value for i in range(12)]
-        
-        #tra ve score va mang
-        return score, board_state
 
-    def clone(self):
-        new_board = Board()
-        for i in range(14):
-            new_board.squares[i] = Square(
-                self.squares[i].position,
-                self.squares[i].value,
-                self.squares[i].is_mandarin
-            )
-            # Sao chép thuộc tính is_eaten cho tất cả các ô
-            new_board.squares[i].is_eaten = self.squares[i].is_eaten
-        return new_board
-
-    def final_score_adjustment(self):#tra lai so quan da muon
-        self.squares[12].value -= self.player1_borrowed
-        self.squares[13].value += self.player1_borrowed
-
-        self.squares[13].value -= self.player2_borrowed
-        self.squares[12].value += self.player2_borrowed
-        
-        return self.player1_borrowed, self.player2_borrowed

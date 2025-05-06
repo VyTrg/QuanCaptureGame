@@ -1,11 +1,11 @@
 import pygame as pg
-from board import Board
+from app.board import Board
 from scoreBoard import ScoreBoard
 
 pg.init()
 clock = pg.time.Clock()
 screen = pg.display.set_mode((1000, 600))
-bg_image = pg.image.load('image/bg.png')
+bg_image = pg.image.load('../image/bg.png')
 bg_image = pg.transform.scale(bg_image, screen.get_size())  
 board = Board(screen)
 scoreboard = ScoreBoard()
