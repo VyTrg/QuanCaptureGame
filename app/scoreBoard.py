@@ -24,7 +24,7 @@ class ScoreBoard:
         elif player2_score > player1_score:
             winner = "PLAYER WIN!"
         else:
-            winner = "Hòa!"
+            winner = "DRAW!"
         self.final_message = self.font.render(f"GAME OVER! {winner}", True, (255, 0, 0))
     def draw (self, screen):
         #Hiển thị điểm người chơi 1

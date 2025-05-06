@@ -58,20 +58,6 @@ class Board:
         self.screen.blit(self.quan_phai, (800, 100))
         self._draw_stones(80, 100, self.tiles[0], is_mandarin=True)
         self._draw_stones(800, 100, self.tiles[6], is_mandarin=True)
-            
- 
-        # if self.entered_tiles:
-        #     tile_index = self.entered_tiles[0]
-        #     title_position = self.tile_positions[tile_index]
-
-        #     if tile_index == 0:
-        #         self.screen.blit(self.enteredRight, title_position)
-
-        #     elif tile_index == 6:
-        #         self.screen.blit(self.enteredLeft, title_position)
-
-        #     else:
-        #         self.screen.blit(self.entered, title_position)
 
         if self.entered_tiles and self.entered_tiles[0] != (80, 100) and self.entered_tiles[0] != (800, 100):
             self.screen.blit(self.entered, self.entered_tiles[0])
@@ -160,11 +146,9 @@ class Board:
         print(self.borrowed)
     # Hàm tính điểm cuối cùng, trừ đi số quân đã mượn
     def calculate_final_scores(self):
-        # Cộng quân còn lại ở hàng trên [1:6] vào điểm của AI 
         top_row_stones = sum(self.tiles[1:6])
         self.scores[0] += top_row_stones
         print(f"Cộng {top_row_stones} quân từ hàng trên vào điểm AI")
-        # Cộng quân còn lại ở hàng dưới tiles[7:12] vào điểm của PLAYER 
         bottom_row_stones = sum(self.tiles[7:12])
         self.scores[1] += bottom_row_stones
         print(f"Cộng {bottom_row_stones} quân từ hàng dưới vào điểm PLAYER")
@@ -235,10 +219,7 @@ class Board:
                         score += self.tiles[eat_pos]
                         self.tiles[eat_pos] = 0
                         pos = eat_pos
-                        # self.draw()
-                        # pg.display.flip()
-                        # pg.time.delay(300)
-                        # self.check_and_replenish_empty_rows(scoreboard)  # Kiểm tra sau khi dừng lượt
+                       
                         next_pos = (pos + step + total_tiles) % total_tiles
                         eat_pos = (next_pos + step + total_tiles) % total_tiles
 
@@ -257,9 +238,7 @@ class Board:
                 
             else:
                 break  # Không còn rải hay ăn tiếp nữa
-        # self.draw()
-        # pg.display.flip()
-        # pg.time.delay(300)
+        
         if player == 1:
             self.scores[0] += score
             scoreboard.add_score(1, score)

@@ -52,14 +52,11 @@ while running:
         board.check_and_replenish_empty_rows(scoreboard)
         if board.end_game(scoreboard):
             game_over = True
-                #final_scores = board.calculate_final_scores()
-                #scoreboard.set_final_scores(final_scores[0], final_scores[1])
     
     screen.blit(bg_image, (0, 0))  
     board.draw()  
     scoreboard.draw(screen)
             
     pg.display.flip()
-    # pg.display.update()
     clock.tick(60)                 
 pg.quit()
