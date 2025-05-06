@@ -13,6 +13,9 @@ class Board:
         # Ô 12 và 13 là điểm của 2 người chơi
         self.squares[12] = Square(12, 0, False)
         self.squares[13] = Square(13, 0, False)
+        # Biến lưu trữ số quân mượn
+        self.player1_borrowed = 0  # Người chơi 1 mượn
+        self.player2_borrowed = 0  # Người chơi 2 mượn
 
     def display_board(self):
         print("\n" + "="*50)
@@ -28,17 +31,58 @@ class Board:
         print(f"  ({'  '})")
         print("\nĐiểm người chơi 1 (ô 12):", self.squares[12].value)
         print("Điểm người chơi 2 (ô 13):", self.squares[13].value)
+        
+        #hien thi mang
+        board_state = [self.squares[i].value for i in range(12)]
+        print("\nbàn cờ (0-11):", board_state)
         print("="*50)
 
-    def fill_if_empty(self, player_idx):
+    def fill_if_empty(self, player_idx, enable_log=True):
+        #check player1 (player_idx=0)
         if player_idx == 0 and not any(self.squares[i].value for i in range(1, 6)):
-            self.squares[12].value -= 5
-            for i in range(1, 6):
-                self.squares[i].value = 1
+            # lay score hien tai cua player1
+            current_score = self.squares[12].value
+            
+            if current_score >= 5:
+                #truong hop du 5 quan de fill
+                self.squares[12].value -= 5
+                for i in range(1, 6):
+                    self.squares[i].value = 1
+                if enable_log:
+                    print(f"player 1 du 5 diem de fill")
+            else:
+                #truong hop khong du quan-> muon quan
+                borrowed = 5 - current_score
+                self.player1_borrowed += borrowed
+                
+                #reset diem ve 0 vi muon quan tu doi thu
+                self.squares[12].value = 0
+                
+                #fill lên cac o
+                for i in range(1, 6):
+                    self.squares[i].value = 1
+                    
+                if enable_log:
+                    print(f"player1 co {current_score} diem và muon {borrowed} quan")
+        
+        # check player2 (player_idx=1)
         if player_idx == 1 and not any(self.squares[i].value for i in range(7, 12)):
-            self.squares[13].value -= 5
-            for i in range(7, 12):
-                self.squares[i].value = 1
+            current_score = self.squares[13].value
+            
+            if current_score >= 5:
+                self.squares[13].value -= 5
+                for i in range(7, 12):
+                    self.squares[i].value = 1
+                if enable_log:
+                    print(f"player 2 du 5 diem de fill")
+            else:
+                borrowed = 5 - current_score
+                self.player2_borrowed += borrowed
+                self.squares[13].value = 0
+                for i in range(7, 12):
+                    self.squares[i].value = 1
+                if enable_log:
+                    print(f"player2 co {current_score} diem và muon {borrowed} quan")
 
     def finished(self):
         # kiem tra quan o 2 o Quan neu =0
@@ -163,3 +207,12 @@ class Board:
             # Sao chép thuộc tính is_eaten cho tất cả các ô
             new_board.squares[i].is_eaten = self.squares[i].is_eaten
         return new_board
+
+    def final_score_adjustment(self):#tra lai so quan da muon
+        self.squares[12].value -= self.player1_borrowed
+        self.squares[13].value += self.player1_borrowed
+
+        self.squares[13].value -= self.player2_borrowed
+        self.squares[12].value += self.player2_borrowed
+        
+        return self.player1_borrowed, self.player2_borrowed
