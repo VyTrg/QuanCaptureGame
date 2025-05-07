@@ -47,21 +47,31 @@ def create_game_tree(board, player, depth):
         if depth > 1:
             # Tạo cây con cho người chơi tiếp theo
             next_player = 1 if player == 2 else 2
-            next_player = 1 if player == 2 else 2
             child_tree = create_game_tree(new_board, next_player, depth - 1)
             for sub_child in child_tree.children:
                 sub_child.parent = child_node
     return root
 
 
-def ai_move(board, depth=3):
+def ai_move(board, depth=3, algorithm="alpha-beta"):
     tree = create_game_tree(board, 1, depth)
     best_value = float('-inf')
     best_move = None
+
+    # Hiện thông báo về thuật toán đang sử dụng
+    print("\n" + "=" * 50)
+    print(f"AI đang sử dụng thuật toán: {algorithm.upper()}")
+    print("=" * 50)
+
     for child in tree.children:
-        # Use alpha-beta pruning instead of minimax
-        value = alpha_beta(child, depth, float('-inf'), float('inf'), False)
-        print(f"Giá trị của nước đi {child.name}: {value}")
+        # Use appropriate algorithm based on selection
+        if algorithm.lower() == "minimax":
+            value = minimax(child, depth, False)
+            print(f"Giá trị của nước đi {child.name} (minimax): {value}")
+        else:  # Default to alpha-beta
+            value = alpha_beta(child, depth, float('-inf'), float('inf'), False)
+            print(f"Giá trị của nước đi {child.name} (alpha-beta): {value}")
+        
         if value > best_value:
             best_value = value
             best_move = child.name
@@ -80,21 +90,28 @@ def ai_move(board, depth=3):
     return [0] * 12  # Mảng mặc định nếu không tìm được nước đi tốt nhất
 
 
-def play_game():
+def play_game(algorithm="alpha-beta"):
     board = BoardAI()
     current_player = 1
     game_over = False
 
+    algorithm_name = "MINIMAX" if algorithm == "minimax" else "ALPHA-BETA PRUNING"
+
     while not game_over:
         board.display_board()
         if current_player == 1:
-            print("Lượt của AI:")
-            board_state = ai_move(board)
+            print("\n" + "-" * 40)
+            print(f"Lượt của AI (sử dụng {algorithm_name}):")
+            print("-" * 40)
+            board_state, score = ai_move(board, algorithm=algorithm)
             # board_state là mảng chứa giá trị của các ô từ 0-11
             board.fill_if_empty(0)  # check và xin quân cho AI (người chơi 1)
             current_player = 2
         else:
-            print("Lượt của bạn (người chơi 2, ô 7-11):")
+            print("\n" + "-" * 30)
+            print(f"Lượt của bạn (người chơi 2, ô 7-11):")
+            print(f"Bạn đang đối đầu với AI sử dụng {algorithm_name}")
+            print("-" * 30)
             try:
                 pos = input("Chọn ô (7-11): ")
                 pos = int(pos)
@@ -139,12 +156,12 @@ def play_game():
             game_over = True
             print("\nTrò chơi kết thúc!")
 
-            # chinh lai diem da muon
+            # chỉnh lại điểm đã mượn
             player1_borrowed, player2_borrowed = board.final_score_adjustment()
             if player1_borrowed > 0:
-                print(f"AI da muon {player1_borrowed} quân")
+                print(f"AI đã mượn {player1_borrowed} quân")
             if player2_borrowed > 0:
-                print(f"player da muon {player2_borrowed} quan")
+                print(f"player đã mượn {player2_borrowed} quân")
 
             board.display_board()
             print(f"Điểm AI: {board.squares[12].value}")
@@ -178,6 +195,10 @@ def play_game():
 if __name__ == "__main__":
     choice = input("Do you want to start? (y/n): ").lower()
     if choice == 'y':
-        play_game()
+        algorithm_choice = input("Chọn thuật toán (minimax/alpha-beta): ").lower()
+        while algorithm_choice not in ["minimax", "alpha-beta"]:
+            print("Lựa chọn không hợp lệ!")
+            algorithm_choice = input("Chọn thuật toán (minimax/alpha-beta): ").lower()
+        play_game(algorithm=algorithm_choice)
     else:
         print("Goodbye!")

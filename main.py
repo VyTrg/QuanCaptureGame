@@ -57,7 +57,18 @@ while running:
                 boardAI.squares[i].value = board.tiles[i]  # sao chép giá trị từ bàn cờ vào bàn cờ AI
             # boardAI.squares = board.tiles + board.scores
             print("Lượt của AI:")
-            board_state, score = mainAI.ai_move(boardAI)
+            #dung thuat toan tu man hinh chon
+            algorithm = ai_option.lower()
+            board_state, score = mainAI.ai_move(boardAI, algorithm=algorithm)
+            print(f"Sử dụng thuật toán: {ai_option}")
+            
+            # Hiển thị thông báo về thuật toán đang được sử dụng trên màn hình
+            font = pg.font.SysFont(None, 30)
+            algorithm_text = font.render(f"AI đang sử dụng thuật toán: {ai_option}", True, (255, 255, 255))
+            screen.blit(algorithm_text, (20, 560))
+            pg.display.update()
+            pg.time.delay(1000)  # Hiển thị 1 giây để người chơi có thể đọc
+            
             print(board_state)
             # board_state là mảng chứa giá trị của các ô từ 0-11
             board.draw_ai_move(board_state, score, scoreboard)  # Hiển thị nước đi của AI trên bàn cờ

@@ -147,13 +147,12 @@ class BoardAI:
         if enable_log:
             print(f"Người chơi {player_idx + 1} rải {stones} quân từ ô {start_pos}, {'phải' if direction == 1 else 'trái'}")
         
-        # Hàm bổ trợ: tính vị trí tiếp theo, đảm bảo modulo hoạt động đúng với số âm
+        # Hàm tính vị trí tiếp theo
         def next_position(current, dir):
             next_pos = (current + dir) % 12
-            # Đảm bảo kết quả luôn là số dương từ 0-11
             return next_pos
         
-        # Rải quân đều
+        # Bước 1: Rải quân đều cho tất cả các ô theo hướng đã chọn
         while stones > 0:
             pos = next_position(pos, direction)
             self.squares[pos].value += 1
@@ -162,51 +161,27 @@ class BoardAI:
         if enable_log:
             print(f"Kết thúc rải ở ô {pos}, có {self.squares[pos].value} quân")
         
-        # Kiểm tra ăn quân hoặc tiếp tục rải quân
-        while True:
+        # Bước 2: Kiểm tra ăn quân hoặc tiếp tục rải
+        continue_turn = True
+        while continue_turn:
             next_pos = next_position(pos, direction)
-
-            # Hiển thị thông tin rõ ràng hơn
+            
+            # Hiển thị thông tin về ô tiếp theo
             if enable_log:
                 square_status = 'trống' if self.squares[next_pos].value == 0 else f'có {self.squares[next_pos].value} quân'
                 square_type = 'Quan' if self.squares[next_pos].is_mandarin else 'Dân'
                 print(f"Kiểm tra ô tiếp theo {next_pos} ({square_type}): {square_status}")
             
-            # Nếu ô tiếp theo là ô Quan thì kết thúc lượt
-            # if self.squares[next_pos].is_mandarin:
-            #     if enable_log:
-            #         print(f"Ô tiếp theo {next_pos} là ô Quan. Kết thúc lượt.")
-            #     break
-
-            if self.squares[next_pos].is_mandarin:
-                if self.squares[next_pos].value == 0:
-                    pos = next_pos
-                    next_pos = next_position(pos, direction)
-                    sq = self.squares[next_pos]
-                    if enable_log:
-                        check_status = 'trống' if sq.value == 0 else f'có {sq.value} quân'
-                        check_type = 'Quan' if sq.is_mandarin else 'Dân'
-                        print(f"Kiểm tra ô tiếp theo {next_pos} ({check_type}): {check_status}")
-
-                    if sq.value > 0:
-                        eaten_points = sq.value
-                        score += eaten_points
-                        sq.value = 0
-                        eaten_type = "Quan" if sq.is_mandarin else "Dân"
-                        eaten_info.append(f"{eaten_points} quân {eaten_type} ở ô {next_pos}")
-                        pos = next_pos
-                        next_pos = next_position(pos, direction)
-                        if enable_log:
-                            print(f"Kết thúc rải ở ô {pos}, có {self.squares[pos].value} quân")
-                        break
-            #check o tiep theo la quan thi ket thuc luot
+            # Kiểm tra nếu ô tiếp theo là ô Quan và có quân => kết thúc lượt
             if self.squares[next_pos].is_mandarin and self.squares[next_pos].value > 0:
                 if enable_log:
-                    print(f"Ô tiếp theo {next_pos} là ô Quan. Kết thúc lượt.")
+                    print(f"Ô tiếp theo {next_pos} là ô Quan và có quân. Kết thúc lượt.")
+                continue_turn = False
                 break
-                
+            
             # Nếu ô tiếp theo trống (value=0)
             if self.squares[next_pos].value == 0:
+                # Kiểm tra ô sau ô trống
                 check_pos = next_position(next_pos, direction)
                 sq = self.squares[check_pos]
                 
@@ -217,7 +192,6 @@ class BoardAI:
                 
                 # Nếu ô sau ô trống có quân thì ăn
                 if sq.value > 0:
-                    # Ăn quân ở dân hoặc mandarin rồi + điểm
                     eaten_points = sq.value
                     score += eaten_points
                     sq.value = 0
@@ -228,11 +202,10 @@ class BoardAI:
                     if enable_log:
                         print(f"Ăn {eaten_points} quân {eaten_type} ở ô {check_pos}")
                     
-                    # Xử lý đặc biệt khi ăn Quan
                     if sq.is_mandarin and enable_log:
                         print(f"Ô {check_pos} là Quan và đã hết quân")
                     
-                    # Kiểm tra có ăn tiếp không
+                    # Sau khi ăn, cập nhật vị trí hiện tại và kiểm tra nếu có thể ăn tiếp
                     pos = check_pos
                     next_after_eaten = next_position(pos, direction)
                     
@@ -241,22 +214,33 @@ class BoardAI:
                         next_type = 'Quan' if self.squares[next_after_eaten].is_mandarin else 'Dân'
                         print(f"Kiểm tra ô sau khi ăn {next_after_eaten} ({next_type}): {next_status}")
                     
+                    # Kiểm tra ô sau khi ăn tiếp theo
                     if self.squares[next_after_eaten].value == 0:
-                        # Nếu ô sau là ô trống thì xét tiếp
-                        if enable_log:
-                            print("Tiếp tục kiểm tra ăn quân")
-                        continue
+                        # Nếu ô sau khi ăn tiếp theo trống, kiểm tra ô sau đó
+                        next_check_pos = next_position(next_after_eaten, direction)
+                        # Chỉ ăn quân nếu ô sau đó có quân
+                        if self.squares[next_check_pos].value > 0:
+                            continue
+                        else:
+                            if enable_log:
+                                print("Dừng ăn quân vì ô sau ô trống không có quân")
+                            continue_turn = False
+                            break
                     else:
-                        # Không phải ô trống thì dừng ăn
+                        # Nếu ô sau khi ăn tiếp theo không trống, dừng ăn quân
                         if enable_log:
                             print("Dừng ăn quân vì ô tiếp theo không trống")
+                        continue_turn = False
                         break
                 else:
+                    # Nếu ô sau ô trống không có quân, dừng lượt
                     if enable_log:
-                        print("Không ăn quân vì ô tiếp theo là trống")
+                        print("Không ăn quân vì ô sau ô trống cũng trống")
+                    continue_turn = False
                     break
             else:
-                # Lấy quân ở ô tiếp theo để rải tiếp
+                # Nếu ô tiếp theo không trống và không phải Quan có quân
+                # => Lấy quân từ ô này để rải tiếp
                 stones = self.squares[next_pos].value
                 self.squares[next_pos].value = 0
                 pos = next_pos
@@ -264,7 +248,7 @@ class BoardAI:
                 if enable_log:
                     print(f"Lấy {stones} quân từ ô {next_pos} để tiếp tục rải")
                 
-                # Rải quân tiếp
+                # Rải quân lấy được
                 while stones > 0:
                     pos = next_position(pos, direction)
                     self.squares[pos].value += 1
@@ -272,14 +256,13 @@ class BoardAI:
                 
                 if enable_log:
                     print(f"Kết thúc rải ở ô {pos}, có {self.squares[pos].value} quân")
-    
-        # Tổng điểm ăn được
+        
+        # Tổng kết điểm ăn được
         if score > 0 and enable_log:
             print(f"Tổng điểm ăn được: {score} điểm: {', '.join(eaten_info)}")
-            
-        board_state = [self.squares[i].value for i in range(12)]
         
-        # Trả về score và mảng trạng thái
+        # Trả về điểm và trạng thái bàn cờ
+        board_state = [self.squares[i].value for i in range(12)]
         return score, board_state
 
     def clone(self):
