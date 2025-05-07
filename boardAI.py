@@ -122,7 +122,7 @@ class BoardAI:
                 print(f"Kiểm tra ô tiếp theo {next_pos}: {'trống' if self.squares[next_pos].value == 0 else f'có {self.squares[next_pos].value} quân'}")
             
             #check o tiep theo la quan thi ket thuc luot
-            if self.squares[next_pos].is_mandarin:
+            if self.squares[next_pos].is_mandarin and self.squares[next_pos].value > 0:
                 if enable_log:
                     print(f"Ô tiếp theo {next_pos} là ô Quan. Kết thúc lượt.")
                 break

@@ -16,13 +16,16 @@ def create_game_tree(board, player, depth):
     else:  # Người chơi - các ô 7-11
         possible_moves = [(i, direction) for i in range(7, 12) for direction in ["left", "right"] if board.squares[i].value > 0]
 
+    if not possible_moves:
+        return root
+
     for move in possible_moves:
         pos, direction = move
         # Sử dụng phương thức clone() đã cải tiến để sao chép bàn cờ
         new_board = board.clone()
         
         # Thực hiện nước đi trên bản sao bàn cờ
-        dir_value = -1 if direction == "left" else 1
+        dir_value = -1 if direction == "right" else 1
         score, board_state = new_board.move(pos, dir_value, 0 if player == 1 else 1, enable_log=False)
         
         # Cập nhật điểm số
@@ -35,20 +38,25 @@ def create_game_tree(board, player, depth):
         child_squares = [square.value for square in new_board.squares]
         child_data = Data(1 if player == 2 else 2, new_board.squares[12].value, new_board.squares[13].value, child_squares)
         child_node = TreeNode(f"{pos}-{direction}", child_data, parent=root)
-
+        
         # Đệ quy tạo cây trò chơi cho các nước đi tiếp theo nếu chưa đạt đến độ sâu tối đa
         if depth > 1:
             # Tạo cây con cho người chơi tiếp theo
             next_player = 1 if player == 2 else 2
+            next_player = 1 if player == 2 else 2
+            child_tree = create_game_tree(new_board, next_player, depth - 1)
+            for sub_child in child_tree.children:
+                sub_child.parent = child_node
     return root
 
-def ai_move(board, depth=2):
+def ai_move(board, depth=3):
     tree = create_game_tree(board, 1, depth)
     best_value = float('-inf')
     best_move = None
     for child in tree.children:
         # Use alpha-beta pruning instead of minimax
         value = alpha_beta(child, depth, float('-inf'), float('inf'), False)
+        print(f"Giá trị của nước đi {child.name}: {value}")
         if value > best_value:
             best_value = value
             best_move = child.name
