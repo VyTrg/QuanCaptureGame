@@ -17,6 +17,6 @@ class TreeNode(BaseNode):
     def __init__(self, name, data, parent=None):
         super().__init__(name=name, parent=parent)  # Để BaseNode xử lý parent
         self.data = data  # Lưu trữ dữ liệu bổ sung
-
+        
     def is_leaf_node(self):
         return len(self.children) == 0

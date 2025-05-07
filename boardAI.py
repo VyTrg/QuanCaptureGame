@@ -165,7 +165,7 @@ class BoardAI:
         # Kiểm tra ăn quân hoặc tiếp tục rải quân
         while True:
             next_pos = next_position(pos, direction)
-            
+
             # Hiển thị thông tin rõ ràng hơn
             if enable_log:
                 square_status = 'trống' if self.squares[next_pos].value == 0 else f'có {self.squares[next_pos].value} quân'
@@ -199,6 +199,11 @@ class BoardAI:
                         if enable_log:
                             print(f"Kết thúc rải ở ô {pos}, có {self.squares[pos].value} quân")
                         break
+            #check o tiep theo la quan thi ket thuc luot
+            if self.squares[next_pos].is_mandarin and self.squares[next_pos].value > 0:
+                if enable_log:
+                    print(f"Ô tiếp theo {next_pos} là ô Quan. Kết thúc lượt.")
+                break
                 
             # Nếu ô tiếp theo trống (value=0)
             if self.squares[next_pos].value == 0:

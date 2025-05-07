@@ -3,6 +3,7 @@ from heuristic import heuristic
 
 def alpha_beta(node: TreeNode, depth, alpha, beta, maximizingPlayer):
     if depth == 0 or node.is_leaf_node:
+        
         return heuristic(node.data)
 
     if maximizingPlayer:
