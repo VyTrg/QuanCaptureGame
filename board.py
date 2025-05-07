@@ -364,6 +364,32 @@ class Board:
                 return idx
         return None
 
+    def get_tile_at_position(self, x, y):
+        # Kiểm tra hàng trên (tiles[1-5])
+        for col in range(self.cols):
+            tile_x = col * self.tile_size + 200
+            tile_y = 100
+            if tile_x <= x < tile_x + self.tile_size and tile_y <= y < tile_y + self.tile_size:
+                return col + 1  # tiles[1] đến tiles[5]
+
+        # Kiểm tra hàng dưới (tiles[7-11])
+        for col in range(self.cols):
+            idx = 7 + col
+            tile_x = (self.cols - 1 - col) * self.tile_size + 200
+            tile_y = 220
+            if tile_x <= x < tile_x + self.tile_size and tile_y <= y < tile_y + self.tile_size:
+                return idx  # tiles[7] đến tiles[11]
+
+        # Kiểm tra ô quan trái (tiles[0])
+        if 80 <= x < 80 + self.tile_size and 100 <= y < 100 + self.tile_size * 2:
+            return 0
+
+        # Kiểm tra ô quan phải (tiles[6])
+        if 800 <= x < 800 + self.tile_size and 100 <= y < 100 + self.tile_size * 2:
+            return 6
+
+        return None
+
     def end_game(self, scoreboard):
         # Kiểm tra xem có ô nào còn quân không
         if all(tile == 0 for tile in self.tiles[1:12]):
@@ -377,5 +403,3 @@ class Board:
             scoreboard.set_final_scores(final_scores[0], final_scores[1])
             return True
         return False
-    
-

@@ -47,9 +47,13 @@ while running:
                                 game_over = True
                             #final_scores = board.calculate_final_socres
             else:
-                # Nếu không phải click mũi tên thì chọn ô
-                board.drawEnterdArea(pos[0], pos[1])
-                board.show_arrows = True  # bật hiển thị mũi tên sau khi chọn ô
+                # kiem tra xem khi click thi o minh chon co quan hay khong
+                tile_index = board.get_tile_at_position(pos[0], pos[1])
+                if tile_index is not None and board.tiles[tile_index] > 0:
+                    # chi cho phep nguoi choi chon tu o 7-11
+                    if board.current_player == 2 and 7 <= tile_index <= 11:
+                        board.drawEnterdArea(pos[0], pos[1])
+                        board.show_arrows = True  # hien thi mui ten khi chon o co quan
             
             print(pos[0], pos[1])
         elif current_player == 1:
