@@ -68,7 +68,7 @@ while running:
             
             # Hiển thị thông báo về thuật toán đang được sử dụng trên màn hình
             font = pg.font.SysFont(None, 30)
-            algorithm_text = font.render(f"AI đang sử dụng thuật toán: {ai_option}", True, (255, 255, 255))
+            algorithm_text = font.render(f"AI is using: {ai_option}", True, (255, 255, 255))
             screen.blit(algorithm_text, (20, 560))
             pg.display.update()
             pg.time.delay(1000)  # Hiển thị 1 giây để người chơi có thể đọc
