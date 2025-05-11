@@ -4,7 +4,7 @@ from treenode import TreeNode
 from alpha_beta import alpha_beta
 from square import Square
 from minimax import minimax
-
+from alpha_beta import iterative_deepening_alpha_beta
 
 def create_game_tree(board, player, depth):
     squares = [square.value for square in board.squares]
@@ -43,13 +43,14 @@ def create_game_tree(board, player, depth):
                           child_squares)
         child_node = TreeNode(f"{pos}-{direction}", child_data, parent=root)
         
-        # Đệ quy tạo cây trò chơi cho các nước đi tiếp theo nếu chưa đạt đến độ sâu tối đa
+        
         if depth > 1:
-            # Tạo cây con cho người chơi tiếp theo
+            
             next_player = 1 if player == 2 else 2
             child_tree = create_game_tree(new_board, next_player, depth - 1)
             for sub_child in child_tree.children:
                 sub_child.parent = child_node
+        
     return root
 
 
@@ -66,12 +67,14 @@ def ai_move(board, depth=3, algorithm="alpha-beta"):
     for child in tree.children:
         # Use appropriate algorithm based on selection
         if algorithm.lower() == "minimax":
-            value = minimax(child, depth, False)
+            value = minimax(child, depth, True)
             print(f"Giá trị của nước đi {child.name} (minimax): {value}")
-        else:  # Default to alpha-beta
-            value = alpha_beta(child, depth, float('-inf'), float('inf'), False)
-            print(f"Giá trị của nước đi {child.name} (alpha-beta): {value}")
-        
+        elif algorithm.lower() == "alpha-beta":  # Default to alpha-beta
+            value = iterative_deepening_alpha_beta(child, depth, True)
+            # print(f"Giá trị của nước đi {child.name} (alpha-beta): {value}")
+        # elif algorithm.lower() == "iter":
+        #     value = iterative_deepening_alpha_beta(child, depth, True)
+
         if value > best_value:
             best_value = value
             best_move = child.name
@@ -90,18 +93,18 @@ def ai_move(board, depth=3, algorithm="alpha-beta"):
     return [0] * 12  # Mảng mặc định nếu không tìm được nước đi tốt nhất
 
 
-def play_game(algorithm="alpha-beta"):
+def play_game(algorithm="iter"):
     board = BoardAI()
     current_player = 1
     game_over = False
 
-    algorithm_name = "MINIMAX" if algorithm == "minimax" else "ALPHA-BETA PRUNING"
+    # algorithm_name = "MINIMAX" if algorithm == "minimax" else "ALPHA-BETA PRUNING"
 
     while not game_over:
         board.display_board()
         if current_player == 1:
             print("\n" + "-" * 40)
-            print(f"Lượt của AI (sử dụng {algorithm_name}):")
+            # print(f"Lượt của AI (sử dụng {algorithm_name}):")
             print("-" * 40)
             board_state, score = ai_move(board, algorithm=algorithm)
             # board_state là mảng chứa giá trị của các ô từ 0-11
@@ -110,7 +113,7 @@ def play_game(algorithm="alpha-beta"):
         else:
             print("\n" + "-" * 30)
             print(f"Lượt của bạn (người chơi 2, ô 7-11):")
-            print(f"Bạn đang đối đầu với AI sử dụng {algorithm_name}")
+            # print(f"Bạn đang đối đầu với AI sử dụng {algorithm_name}")
             print("-" * 30)
             try:
                 pos = input("Chọn ô (7-11): ")
@@ -196,7 +199,7 @@ if __name__ == "__main__":
     choice = input("Do you want to start? (y/n): ").lower()
     if choice == 'y':
         algorithm_choice = input("Chọn thuật toán (minimax/alpha-beta): ").lower()
-        while algorithm_choice not in ["minimax", "alpha-beta"]:
+        while algorithm_choice not in ["minimax", "alpha-beta", "iter"]:
             print("Lựa chọn không hợp lệ!")
             algorithm_choice = input("Chọn thuật toán (minimax/alpha-beta): ").lower()
         play_game(algorithm=algorithm_choice)
